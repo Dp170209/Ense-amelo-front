@@ -191,12 +191,14 @@
 
 <script>
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { cursosAPI } from '../api/cursos'
 import { categoriasAPI } from '../api/categorias'
 
 export default {
   name: 'Home',
   setup() {
+    const router = useRouter()
     const cursos = ref([])
     const categorias = ref([])
     const loading = ref(true)
@@ -283,12 +285,12 @@ export default {
 
     // Ver curso
     const viewCourse = (curso) => {
-      alert(`Ver detalles del curso: ${curso.nombre}`)
+      router.push(`/curso/${curso._id}`)
     }
 
     // Manejar perfil
     const handleProfile = () => {
-      alert('Funcionalidad de perfil próximamente disponible')
+      router.push('/perfil')
     }
 
     // Cerrar sesión

@@ -124,6 +124,10 @@
             <button type="submit" class="btn btn-secondary" :disabled="loading">
               {{ loading ? 'Registrando...' : 'Registrarse' }}
             </button>
+            
+            <div class="login-link">
+              <p>¿Ya tienes cuenta? <a href="#" @click.prevent="goToLogin">Inicia sesión aquí</a></p>
+            </div>
           </form>
         </div>
       </div>
@@ -198,10 +202,15 @@ export default {
       }
     }
 
+    const goToLogin = () => {
+      router.push('/login')
+    }
+
     return {
       form,
       loading,
-      handleRegister
+      handleRegister,
+      goToLogin
     }
   }
 }
@@ -361,5 +370,26 @@ export default {
 
 .btn-secondary:hover {
   background-color: #34495e;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.login-link p {
+  color: #2c3e50;
+  font-size: 14px;
+  margin: 0;
+}
+
+.login-link a {
+  color: #36759e;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.login-link a:hover {
+  text-decoration: none;
 }
 </style>

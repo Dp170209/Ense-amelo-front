@@ -60,6 +60,10 @@
             <div class="forgot-password">
               <a href="#" @click.prevent="handleForgotPassword">Olvidaste tu contraseña?</a>
             </div>
+            
+            <div class="register-link">
+              <p>¿No tienes cuenta? <a href="#" @click.prevent="goToRegister">Regístrate aquí</a></p>
+            </div>
           </form>
         </div>
       </div>
@@ -107,11 +111,16 @@ export default {
       alert('Función de recuperar contraseña próximamente disponible')
     }
 
+    const goToRegister = () => {
+      router.push('/register')
+    }
+
     return {
       form,
       loading,
       handleLogin,
-      handleForgotPassword
+      handleForgotPassword,
+      goToRegister
     }
   }
 }
@@ -255,6 +264,27 @@ export default {
 }
 
 .forgot-password a:hover {
+  text-decoration: none;
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.register-link p {
+  color: #2c3e50;
+  font-size: 14px;
+  margin: 0;
+}
+
+.register-link a {
+  color: #36759e;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.register-link a:hover {
   text-decoration: none;
 }
 </style>
