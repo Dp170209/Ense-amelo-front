@@ -295,7 +295,7 @@ export default {
 }
 
 .main-content {
-  padding: 40px 0;
+  padding: 8px 0;
 }
 
 .container {

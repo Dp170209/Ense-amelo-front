@@ -1,16 +1,5 @@
 <template>
   <div class="perfil-page">
-    <!-- Header -->
-    <div class="header">
-      <div class="container">
-        <div class="header-content">
-          <div class="header-left">
-            <h1>Perfil Estudiante</h1>
-            <p class="header-subtitle">Container</p>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Main Content -->
     <div class="main-content">

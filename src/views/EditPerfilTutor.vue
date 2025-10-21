@@ -5,8 +5,7 @@
       <div class="container">
         <div class="header-content">
           <div class="header-left">
-            <h1>Editar Perfil Tutor</h1>
-            <p class="header-subtitle">Container</p>
+            <h1>Editar Perfil</h1>
           </div>
         </div>
       </div>
@@ -359,7 +358,7 @@ export default {
 }
 
 .main-content {
-  padding: 40px 0;
+  padding: 8px 0;
 }
 
 .container {

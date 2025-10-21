@@ -51,7 +51,7 @@
                       <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H12V15H7V10Z"/>
                       </svg>
-                      Ver Calendario
+                      Ver mis chats
                     </button>
                   </div>
                 </div>
@@ -103,13 +103,13 @@
           <!-- Right Content - Calendar -->
           <div class="right-content">
             <div class="calendar-widget">
-              <h3>Select date</h3>
-              <div class="current-date">Mon, Aug 17</div>
+              <h3>Seleccionar una fecha</h3>
+              <div class="current-date">Lunes, 21 de Octubre</div>
               
               <div class="month-selector">
                 <button class="nav-btn">‹</button>
                 <select class="month-dropdown">
-                  <option>August 2025</option>
+                  <option>Octubre 2025</option>
                 </select>
                 <button class="nav-btn">›</button>
               </div>
@@ -117,24 +117,23 @@
               <div class="calendar-grid">
                 <div class="calendar-header">
                   <div class="day-header">S</div>
+                  <div class="day-header">D</div>
+                  <div class="day-header">L</div>
                   <div class="day-header">M</div>
-                  <div class="day-header">T</div>
-                  <div class="day-header">W</div>
-                  <div class="day-header">T</div>
-                  <div class="day-header">F</div>
-                  <div class="day-header">S</div>
+                  <div class="day-header">M</div>
+                  <div class="day-header">J</div>
+                  <div class="day-header">V</div>
                 </div>
                 <div class="calendar-days">
                   <div class="calendar-day" v-for="day in calendarDays" :key="day" 
-                       :class="{ selected: day === 17, highlighted: day === 5 }">
+                       :class="{ selected: day === 21, highlighted: day === 5 }">
                     {{ day }}
                   </div>
                 </div>
               </div>
 
               <div class="calendar-actions">
-                <button class="calendar-btn">Clear</button>
-                <button class="calendar-btn">Cancel</button>
+                <button class="calendar-btn">Cancelar</button>
                 <button class="calendar-btn primary">OK</button>
               </div>
             </div>
@@ -159,25 +158,25 @@ export default {
         id: 1,
         titulo: 'Clase 1',
         categoria: 'Matemáticas',
-        precio: '$$',
-        distancia: '1.2 miles away',
-        descripcion: 'Supporting line text lorem ipsum dolor sit amet, consectetur.'
+        precio: 'Bs 50',
+        modalidad: 'presencial',
+        descripcion: 'Clases de matemáticas para estudiantes de primaria'
       },
       {
         id: 2,
         titulo: 'Clase 2',
         categoria: 'Programación',
-        precio: '$$$',
-        distancia: '0.8 miles away',
-        descripcion: 'Supporting line text lorem ipsum dolor sit amet, consectetur.'
+        precio: 'Bs 100',
+        modalidad: 'presencial',
+        descripcion: 'Aprende a programar en python desde cero'
       },
       {
         id: 3,
         titulo: 'Clase 3',
         categoria: 'Inglés',
-        precio: '$$',
-        distancia: '2.1 miles away',
-        descripcion: 'Supporting line text lorem ipsum dolor sit amet, consectetur.'
+        precio: 'Bs 150',
+        distancia: 'virtual',
+        descripcion: 'Clases virtuales de inglés nivel B2'
       }
     ])
 

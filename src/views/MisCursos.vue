@@ -1,15 +1,6 @@
 <template>
   <div class="mis-cursos-page">
     <!-- Header -->
-    <div class="header">
-      <div class="container">
-        <div class="header-content">
-          <div class="header-left">
-            <h1>Mis Cursos</h1>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Navigation Bar -->
     <div class="nav-bar">
