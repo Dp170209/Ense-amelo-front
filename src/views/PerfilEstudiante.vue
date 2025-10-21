@@ -93,7 +93,7 @@
 
           <!-- Profile Actions -->
           <div class="profile-actions-section">
-            <button class="edit-profile-btn" @click="handleEditProfile">
+            <button class="edit-profile-btn" @click="editProfile">
               Editar Perfil
             </button>
             <button class="logout-btn" @click="handleLogout">
@@ -138,8 +138,8 @@ export default {
       alert('Funcionalidad de mensajes próximamente disponible')
     }
 
-    const handleEditProfile = () => {
-      alert('Funcionalidad de editar perfil próximamente disponible')
+    const editProfile = () => {
+      router.push('/edit-perfil')
     }
 
     const handleLogout = () => {
@@ -164,7 +164,7 @@ export default {
       user,
       loading,
       handleSendMessage,
-      handleEditProfile,
+      editProfile,
       handleLogout,
       showDetails
     }

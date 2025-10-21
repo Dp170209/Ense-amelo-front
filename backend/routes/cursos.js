@@ -2,6 +2,7 @@ const express = require('express');
 const Curso = require('../models/Curso');
 const Categoria = require('../models/Categoria');
 const PerfilTutor = require('../models/PerfilTutor');
+const Usuario = require('../models/Usuario');
 const { authenticateToken } = require('./auth');
 
 const router = express.Router();

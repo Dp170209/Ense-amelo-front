@@ -221,7 +221,8 @@ export default {
     }
 
     const handleReservar = () => {
-      alert('Funcionalidad de reserva próximamente disponible')
+      // Redirigir al chat para comunicarse con el tutor
+      router.push('/chat')
     }
 
     const handleLogout = () => {

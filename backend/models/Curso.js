@@ -47,6 +47,10 @@ const cursoSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Categoria'
   }],
+  tags: [{
+    type: String,
+    maxlength: 20
+  }],
   activo: {
     type: Boolean,
     default: true

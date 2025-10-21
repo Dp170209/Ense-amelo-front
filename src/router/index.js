@@ -1,17 +1,24 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import Landing from '../views/Landing.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import RegistroTutor from '../views/RegistroTutor.vue'
 import Home from '../views/Home.vue'
 import PanelTutor from '../views/PanelTutor.vue'
+import Chat from '../views/Chat.vue'
 import CursoDetalle from '../views/CursoDetalle.vue'
 import PerfilEstudiante from '../views/PerfilEstudiante.vue'
 import PerfilTutor from '../views/PerfilTutor.vue'
+import EditPerfilEstudiante from '../views/EditPerfilEstudiante.vue'
+import EditPerfilTutor from '../views/EditPerfilTutor.vue'
+import ConfigCurso from '../views/ConfigCurso.vue'
+import MisCursos from '../views/MisCursos.vue'
 
 const routes = [
   {
     path: '/',
-    redirect: '/login'
+    name: 'Landing',
+    component: Landing
   },
   {
     path: '/login',
@@ -41,6 +48,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/chat',
+    name: 'Chat',
+    component: Chat,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/curso/:id',
     name: 'CursoDetalle',
     component: CursoDetalle,
@@ -57,6 +70,30 @@ const routes = [
     name: 'PerfilTutor',
     component: PerfilTutor,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/edit-perfil',
+    name: 'EditPerfilEstudiante',
+    component: EditPerfilEstudiante,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/edit-perfil-tutor',
+    name: 'EditPerfilTutor',
+    component: EditPerfilTutor,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/config-curso',
+    name: 'ConfigCurso',
+    component: ConfigCurso,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/mis-cursos',
+    name: 'MisCursos',
+    component: MisCursos,
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -69,15 +106,30 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token')
   const user = JSON.parse(localStorage.getItem('user') || '{}')
-  
+
   if (to.meta.requiresAuth && !token) {
     next('/login')
   } else if (to.path === '/login' && token) {
-    // Si ya está logueado, redirigir al home
-    next('/home')
+    // Si ya está logueado, redirigir según el rol
+    if (user.rol === 'docente') {
+      next('/panel-tutor')
+    } else {
+      next('/home')
+    }
   } else if (to.path === '/register' && token) {
-    // Si ya está logueado, redirigir al home
-    next('/home')
+    // Si ya está logueado, redirigir según el rol
+    if (user.rol === 'docente') {
+      next('/panel-tutor')
+    } else {
+      next('/home')
+    }
+  } else if (to.path === '/registro-tutor' && token) {
+    // Si ya está logueado, redirigir según el rol
+    if (user.rol === 'docente') {
+      next('/panel-tutor')
+    } else {
+      next('/home')
+    }
   } else {
     next()
   }

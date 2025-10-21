@@ -13,8 +13,9 @@
             <h1>Panel Tutor</h1>
           </div>
           <div class="nav-links">
+            <router-link to="/panel-tutor" class="nav-link active">Panel</router-link>
             <router-link to="/mis-cursos" class="nav-link">Mis cursos</router-link>
-            <router-link to="/chats" class="nav-link">Chats</router-link>
+            <router-link to="/chat" class="nav-link">Chats</router-link>
             <router-link to="/explorar" class="nav-link">Explorar</router-link>
             <button @click="handleLogout" class="logout-btn">Cerrar Sesión</button>
             <div class="user-icon" @click="handleProfile">
@@ -38,19 +39,19 @@
               <div class="banner-content">
                 <div class="banner-info">
                   <h2>Panel de Tutores</h2>
-                  <p>Subtitle</p>
+                  <p>Gestiona tus cursos y horarios</p>
                   <div class="banner-actions">
-                    <button class="action-btn">
+                    <button class="action-btn" @click="createNewCourse">
                       <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z"/>
+                        <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
                       </svg>
-                      Add to my itinerary
+                      Crear Nuevo Curso
                     </button>
-                    <button class="action-btn">
+                    <button class="action-btn" @click="viewCalendar">
                       <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22S19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9S10.62 6.5 12 6.5 14.5 7.62 14.5 9 13.38 11.5 12 11.5Z"/>
+                        <path d="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H12V15H7V10Z"/>
                       </svg>
-                      12 mins from hotel
+                      Ver Calendario
                     </button>
                   </div>
                 </div>
@@ -204,6 +205,14 @@ export default {
       router.push('/perfil-tutor')
     }
 
+    const createNewCourse = () => {
+      router.push('/config-curso')
+    }
+
+    const viewCalendar = () => {
+      router.push('/chat')
+    }
+
     return {
       clases,
       calendarDays,
@@ -211,7 +220,9 @@ export default {
       rechazar,
       aceptar,
       handleLogout,
-      handleProfile
+      handleProfile,
+      createNewCourse,
+      viewCalendar
     }
   }
 }
