@@ -41,7 +41,7 @@ router.post('/register', [
     // Crear nuevo usuario
     const newUser = new Usuario({
       email,
-      password,
+      contrasenia: password,
       rol,
       nombre: nombre || 'Usuario',
       apellido: apellido || '',

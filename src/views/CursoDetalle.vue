@@ -231,7 +231,12 @@ export default {
     }
 
     const handleProfile = () => {
-      router.push('/perfil')
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user.rol === 'docente') {
+        router.push('/perfil-tutor')
+      } else {
+        router.push('/perfil')
+      }
     }
 
     onMounted(() => {

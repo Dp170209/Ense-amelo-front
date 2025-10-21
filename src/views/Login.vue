@@ -63,6 +63,7 @@
             
             <div class="register-link">
               <p>¿No tienes cuenta? <a href="#" @click.prevent="goToRegister">Regístrate aquí</a></p>
+              <p>¿Eres tutor? <a href="#" @click.prevent="goToRegisterTutor">Registro de tutor</a></p>
             </div>
           </form>
         </div>
@@ -94,7 +95,13 @@ export default {
         if (response.data.success) {
           localStorage.setItem('token', response.data.token)
           localStorage.setItem('user', JSON.stringify(response.data.user))
-          router.push('/home')
+          
+          // Redirigir según el rol del usuario
+          if (response.data.user.rol === 'docente') {
+            router.push('/panel-tutor')
+          } else {
+            router.push('/home')
+          }
         } else {
           alert('Error en el login: ' + response.data.message)
         }
@@ -115,12 +122,17 @@ export default {
       router.push('/register')
     }
 
+    const goToRegisterTutor = () => {
+      router.push('/registro-tutor')
+    }
+
     return {
       form,
       loading,
       handleLogin,
       handleForgotPassword,
-      goToRegister
+      goToRegister,
+      goToRegisterTutor
     }
   }
 }
