@@ -5,7 +5,7 @@
       <div class="container">
         <div class="header-content">
           <div class="header-left">
-            <h1>Home (Estudiante)</h1>
+            <h1>Home</h1>
             <div class="logo-icon-small">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M4 6H2V4C2 2.89 2.89 2 4 2H6V4H4V6M20 2H22V4H20V6H22V8H20V10H18V8H16V6H18V4H16V2H18V0H20V2M4 20H2V22C2 23.11 2.89 24 4 24H6V22H4V20M22 22V20H20V18H22V16H20V14H18V16H16V18H18V20H16V22H18V24H20V22H22Z"/>
@@ -16,7 +16,6 @@
             <router-link to="/mis-cursos" class="nav-link">Mis cursos</router-link>
             <router-link to="/chats" class="nav-link">Chats</router-link>
             <router-link to="/explorar" class="nav-link">Explorar</router-link>
-            <button @click="handleLogout" class="logout-btn">Cerrar Sesión</button>
             <div class="user-icon" @click="handleProfile">
               <svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z"/>
@@ -35,7 +34,7 @@
           <input
             type="text"
             class="search-input"
-            placeholder="Value"
+            placeholder="Guitarra"
             v-model="searchQuery"
             @input="handleSearch"
           />
@@ -89,7 +88,7 @@
               <span class="course-tag">{{ curso.modalidad }}</span>
               <p class="course-description">{{ curso.descripcion }}</p>
               <div class="course-price">
-                <strong>${{ curso.precio_reserva }}</strong>
+                <strong>Bs{{ curso.precio_reserva }}</strong>
               </div>
             </div>
           </div>
@@ -102,7 +101,7 @@
             :disabled="!pagination.hasPrev"
             class="pagination-btn"
           >
-            ← Previous
+            ← Anterior
           </button>
           
           <button
@@ -119,7 +118,7 @@
             :disabled="!pagination.hasNext"
             class="pagination-btn"
           >
-            Next →
+            Siguiente →
           </button>
         </div>
       </div>
