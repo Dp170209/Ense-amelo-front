@@ -50,13 +50,55 @@
                     <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"/>
                   </svg>
                 </button>
-                
-                <div class="image-upload-large">
-                  <div class="image-placeholder">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
-                    </svg>
-                  </div>
+
+                <!-- Drag & Drop / Click para portada -->
+                <div
+                  class="image-upload-large"
+                  :class="{ dragover: isDragOver }"
+                  @click="$refs.portadaInput.click()"
+                  @dragover.prevent="isDragOver = true"
+                  @dragleave.prevent="isDragOver = false"
+                  @drop.prevent="onDropPortada"
+                >
+                  <input
+                    ref="portadaInput"
+                    type="file"
+                    accept="image/*"
+                    style="display:none"
+                    @change="onPickPortada"
+                  />
+
+                  <!-- Previsualización / estados -->
+                  <template v-if="uploadingPortada">
+                    <div style="text-align:center; color:#7f8c8d;">Subiendo imagen...</div>
+                  </template>
+
+                  <template v-else-if="form.portada_url">
+                    <img
+                      :src="form.portada_url"
+                      alt="Portada"
+                      style="max-height:100%; max-width:100%; border-radius:8px;"
+                    />
+                  </template>
+
+                  <template v-else-if="previewPortada">
+                    <img
+                      :src="previewPortada"
+                      alt="Previsualización"
+                      style="max-height:100%; max-width:100%; border-radius:8px;"
+                    />
+                  </template>
+
+                  <template v-else>
+                    <div class="image-placeholder">
+                      <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+                      </svg>
+                      <div style="margin-top:8px; color:#7f8c8d; font-size:14px;">
+                        Arrastra una imagen o haz clic
+                      </div>
+                    </div>
+                  </template>
                 </div>
 
                 <div class="description-section">
@@ -92,8 +134,8 @@
                       <button type="button" @click="addTag" class="add-tag-btn">+</button>
                     </div>
                     <div class="tags-list">
-                      <div 
-                        v-for="(tag, index) in form.tags" 
+                      <div
+                        v-for="(tag, index) in form.tags"
                         :key="index"
                         class="tag-item"
                       >
@@ -110,7 +152,7 @@
                     <input
                       type="number"
                       class="form-input price-input"
-                      v-model="form.precio_reserva"
+                      v-model.number="form.precio_reserva"
                       placeholder="0"
                       min="0"
                       step="0.01"
@@ -123,7 +165,7 @@
                       </label>
                     </div>
                   </div>
-                  <p class="price-hint">Texto cualquiera para poder poner información del curso</p>
+                  <p class="price-hint">Define el precio por hora.</p>
                 </div>
 
                 <div class="form-group">
@@ -146,17 +188,9 @@
                   </select>
                 </div>
 
-                <div class="image-upload-small">
-                  <div class="image-placeholder-small">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M19 13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
-                    </svg>
-                  </div>
-                </div>
-
                 <div class="form-actions">
                   <button type="button" @click="goBack" class="cancel-btn">Cancelar</button>
-                  <button type="submit" class="save-btn" :disabled="loading">
+                  <button type="submit" class="save-btn" :disabled="loading || uploadingPortada">
                     {{ loading ? 'Guardando...' : 'Guardar Curso' }}
                   </button>
                 </div>
@@ -186,7 +220,7 @@
               <div class="social-icon">LI</div>
             </div>
           </div>
-          
+
           <div class="footer-section">
             <h3 class="footer-title">Use cases</h3>
             <ul class="footer-links">
@@ -199,7 +233,7 @@
               <li><a href="#">Team collaboration</a></li>
             </ul>
           </div>
-          
+
           <div class="footer-section">
             <h3 class="footer-title">Explore</h3>
             <ul class="footer-links">
@@ -212,7 +246,7 @@
               <li><a href="#">FigJam</a></li>
             </ul>
           </div>
-          
+
           <div class="footer-section">
             <h3 class="footer-title">Resources</h3>
             <ul class="footer-links">
@@ -236,6 +270,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { cursosAPI } from '../api/cursos'
 import { categoriasAPI } from '../api/categorias'
+import { uploadsAPI } from '../api/uploads' // <- IMPORTANTE
 
 export default {
   name: 'ConfigCurso',
@@ -243,7 +278,12 @@ export default {
     const router = useRouter()
     const loading = ref(false)
     const categorias = ref([])
-    
+
+    // estado portada
+    const uploadingPortada = ref(false)
+    const isDragOver = ref(false)
+    const previewPortada = ref('') // preview local (ObjectURL) antes de subir
+
     const form = ref({
       nombre: '',
       descripcion: '',
@@ -251,7 +291,9 @@ export default {
       precio_reserva: 0,
       necesita_reserva: true,
       categoria: '',
-      tags: []
+      tags: [],
+      portada_url: '',   // guardamos la URL devuelta por backend
+      galeria_urls: []   // reservado para futuras múltiples imágenes
     })
 
     const fetchCategorias = async () => {
@@ -276,35 +318,74 @@ export default {
       form.value.tags.splice(index, 1)
     }
 
+    // ---- Upload portada (con preview inmediato) ----
+    const uploadPortada = async (file) => {
+      try {
+        // preview local UX
+        previewPortada.value = URL.createObjectURL(file)
+
+        uploadingPortada.value = true
+        const { data } = await uploadsAPI.uploadImage(file)
+        if (!data?.success) throw new Error('No se pudo subir la portada')
+
+        // usar URL pública servida por backend
+        form.value.portada_url = data.url
+
+        // liberar el ObjectURL previo (opcional)
+        URL.revokeObjectURL(previewPortada.value)
+        previewPortada.value = ''
+      } catch (e) {
+        console.error(e)
+        alert('No se pudo subir la imagen. Usa JPG/PNG/WebP y < 5MB.')
+      } finally {
+        uploadingPortada.value = false
+        isDragOver.value = false
+      }
+    }
+
+    const onPickPortada = (e) => {
+      const f = e.target.files?.[0]
+      if (f) uploadPortada(f)
+    }
+
+    const onDropPortada = (e) => {
+      const f = e.dataTransfer?.files?.[0]
+      if (f) uploadPortada(f)
+    }
+
+    // ---- Submit ----
     const handleSubmit = async () => {
       if (!form.value.nombre || !form.value.descripcion || !form.value.modalidad || !form.value.categoria) {
         alert('Por favor completa todos los campos requeridos')
         return
       }
-
       if (form.value.precio_reserva <= 0) {
         alert('El precio debe ser mayor a 0')
+        return
+      }
+      if (uploadingPortada.value) {
+        alert('Espera a que termine de subir la imagen')
         return
       }
 
       try {
         loading.value = true
-        
         const cursoData = {
           nombre: form.value.nombre,
           descripcion: form.value.descripcion,
           modalidad: form.value.modalidad,
           precio_reserva: form.value.precio_reserva,
           necesita_reserva: form.value.necesita_reserva,
-          categorias: [form.value.categoria], // Convertir a array como espera el modelo
+          categorias: [form.value.categoria],
           tags: form.value.tags,
-          fotos: [] // Por ahora sin imágenes
+          portada_url: form.value.portada_url || '',  // <-- clave con tu backend
+          galeria_urls: form.value.galeria_urls || [] // por ahora vacío
         }
 
         const response = await cursosAPI.createCurso(cursoData)
-        
+
         if (response.data.success) {
-          alert('Curso creado exitosamente!')
+          alert('¡Curso creado exitosamente!')
           router.push('/panel-tutor')
         } else {
           alert('Error al crear el curso: ' + response.data.message)
@@ -317,13 +398,8 @@ export default {
       }
     }
 
-    const goBack = () => {
-      router.push('/panel-tutor')
-    }
-
-    const handleProfile = () => {
-      router.push('/perfil-tutor')
-    }
+    const goBack = () => router.push('/panel-tutor')
+    const handleProfile = () => router.push('/perfil-tutor')
 
     onMounted(() => {
       fetchCategorias()
@@ -337,7 +413,13 @@ export default {
       removeTag,
       handleSubmit,
       goBack,
-      handleProfile
+      handleProfile,
+      // portada
+      uploadingPortada,
+      isDragOver,
+      previewPortada,
+      onPickPortada,
+      onDropPortada
     }
   }
 }
@@ -492,6 +574,12 @@ export default {
 }
 
 .image-upload-large:hover {
+  background-color: #d5dbdb;
+  border-color: #36759e;
+}
+
+/* Estado visual de drag & drop */
+.image-upload-large.dragover {
   background-color: #d5dbdb;
   border-color: #36759e;
 }
@@ -712,35 +800,6 @@ export default {
   font-style: italic;
 }
 
-.image-upload-small {
-  width: 150px;
-  height: 150px;
-  background-color: #ecf0f1;
-  border: 2px dashed #bdc3c7;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.image-upload-small:hover {
-  background-color: #d5dbdb;
-  border-color: #36759e;
-}
-
-.image-placeholder-small {
-  width: 30px;
-  height: 30px;
-  color: #7f8c8d;
-}
-
-.image-placeholder-small svg {
-  width: 100%;
-  height: 100%;
-}
-
 .form-actions {
   display: flex;
   gap: 15px;
@@ -881,29 +940,29 @@ export default {
     grid-template-columns: 1fr;
     gap: 30px;
   }
-  
+
   .nav-right {
     gap: 10px;
   }
-  
+
   .nav-link {
     font-size: 14px;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .cancel-btn,
   .save-btn {
     width: 100%;
   }
-  
+
   .price-container {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .footer-content {
     flex-direction: column;
   }

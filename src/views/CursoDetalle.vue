@@ -14,7 +14,7 @@
           </div>
           <div class="nav-links">
             <router-link to="/home" class="nav-link">Mis cursos</router-link>
-            <router-link to="/chats" class="nav-link">Chats</router-link>
+            <router-link to="/chat" class="nav-link">Chats</router-link>
             <router-link to="/explorar" class="nav-link">Explorar</router-link>
             <button @click="handleLogout" class="logout-btn">Cerrar Sesión</button>
             <div class="user-icon" @click="handleProfile">
@@ -40,13 +40,24 @@
             <!-- Left Column - Course Media -->
             <div class="curso-media">
               <div class="curso-image">
-                <span>Imagen del curso</span>
+                <template v-if="images.length">
+                  <img
+                    :src="images[currentImage]"
+                    :alt="`Imagen del curso: ${curso?.nombre || ''}`"
+                    loading="lazy"
+                    @error="onImageError"
+                  />
+                  <div class="image-navigation" v-if="images.length > 1">
+                    <button class="nav-arrow" @click="prevImage">‹</button>
+                    <button class="nav-arrow" @click="nextImage">›</button>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <span>Sin imagen</span>
+                </template>
               </div>
-              <div class="image-navigation">
-                <button class="nav-arrow">‹</button>
-                <button class="nav-arrow">›</button>
-              </div>
-              
+
               <!-- Instructor Info -->
               <div class="instructor-info">
                 <div class="instructor-avatar">
@@ -193,7 +204,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { cursosAPI } from '../api/cursos'
 
@@ -204,6 +215,21 @@ export default {
     const router = useRouter()
     const curso = ref(null)
     const loading = ref(true)
+
+    // Origen del backend (http://localhost:3000) derivado de tu VITE_API_URL
+    const BACKEND_ORIGIN =
+      (import.meta.env.VITE_BACKEND_ORIGIN) ||
+      ((import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '')) ||
+      'http://localhost:3000';
+
+    const absolutize = (u) => {
+      if (!u) return ''
+      if (/^https?:\/\//i.test(u)) return u
+      // si viene como /static/cursos/...
+      if (u.startsWith('/')) return `${BACKEND_ORIGIN}${u}`
+      // cualquier otra cosa rara, intenta como path relativo
+      return `${BACKEND_ORIGIN}/${u.replace(/^\/+/, '')}`
+    }
 
     const fetchCurso = async () => {
       try {
@@ -220,10 +246,43 @@ export default {
       }
     }
 
-    const handleReservar = () => {
-      // Redirigir al chat para comunicarse con el tutor
-      router.push('/chat')
+    // Carrusel de imágenes: portada + galería (normalizando URLs)
+    const currentImage = ref(0)
+    const images = computed(() => {
+      const arr = []
+      if (curso.value?.portada_url) arr.push(absolutize(curso.value.portada_url))
+      if (Array.isArray(curso.value?.galeria_urls)) {
+        arr.push(...curso.value.galeria_urls.filter(Boolean).map(absolutize))
+      }
+      return arr
+    })
+
+    watch(() => curso.value, () => { currentImage.value = 0 })
+
+    const nextImage = () => {
+      if (!images.value.length) return
+      currentImage.value = (currentImage.value + 1) % images.value.length
     }
+
+    const prevImage = () => {
+      if (!images.value.length) return
+      currentImage.value = (currentImage.value - 1 + images.value.length) % images.value.length
+    }
+
+    const onImageError = (e) => {
+      // Si falló, loguea la URL para depurar 404s
+      console.warn('Fallo al cargar imagen:', e.target?.src)
+      e.target.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+          <rect width="100%" height="100%" fill="#ecf0f1"/>
+          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d" font-family="Arial" font-size="20">
+            Imagen no disponible
+          </text>
+        </svg>`
+      )
+    }
+
+    const handleReservar = () => router.push('/chat')
 
     const handleLogout = () => {
       localStorage.removeItem('token')
@@ -233,23 +292,23 @@ export default {
 
     const handleProfile = () => {
       const user = JSON.parse(localStorage.getItem('user') || '{}')
-      if (user.rol === 'docente') {
-        router.push('/perfil-tutor')
-      } else {
-        router.push('/perfil')
-      }
+      if (user.rol === 'docente') router.push('/perfil-tutor')
+      else router.push('/perfil')
     }
 
-    onMounted(() => {
-      fetchCurso()
-    })
+    onMounted(fetchCurso)
 
     return {
       curso,
       loading,
       handleReservar,
       handleLogout,
-      handleProfile
+      handleProfile,
+      images,
+      currentImage,
+      nextImage,
+      prevImage,
+      onImageError
     }
   }
 }
@@ -388,6 +447,15 @@ export default {
   color: #7f8c8d;
   border-radius: 8px;
   position: relative;
+  overflow: hidden;
+}
+
+.curso-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 8px;
 }
 
 .image-navigation {
@@ -395,9 +463,10 @@ export default {
   top: 50%;
   left: 0;
   right: 0;
+  transform: translateY(-50%);
   display: flex;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 12px;
   pointer-events: none;
 }
 

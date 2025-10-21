@@ -14,7 +14,7 @@
           </div>
           <div class="nav-links">
             <router-link to="/mis-cursos" class="nav-link">Mis cursos</router-link>
-            <router-link to="/chats" class="nav-link">Chats</router-link>
+            <router-link to="/chat" class="nav-link">Chats</router-link>
             <router-link to="/explorar" class="nav-link">Explorar</router-link>
             <div class="user-icon" @click="handleProfile">
               <svg viewBox="0 0 24 24" fill="currentColor">
@@ -81,7 +81,17 @@
             @click="viewCourse(curso)"
           >
             <div class="course-image">
-              <span>Imagen del curso</span>
+              <template v-if="coverUrl(curso)">
+                <img
+                  :src="coverUrl(curso)"
+                  :alt="`Portada curso: ${curso.nombre}`"
+                  loading="lazy"
+                  @error="onImageError"
+                />
+              </template>
+              <template v-else>
+                <span>Sin imagen</span>
+              </template>
             </div>
             <div class="course-content">
               <h3 class="course-title">{{ curso.nombre }}</h3>
@@ -108,7 +118,8 @@
             v-for="page in visiblePages"
             :key="page"
             :class="['pagination-btn', { active: page === pagination.currentPage }]"
-            @click="changePage(page)"
+            @click="typeof page === 'number' && changePage(page)"
+            :disabled="page === '...'"
           >
             {{ page }}
           </button>
@@ -212,6 +223,37 @@ export default {
       hasPrev: false
     })
 
+    // Origen del backend (para normalizar URLs relativas)
+    const BACKEND_ORIGIN =
+      (import.meta.env.VITE_BACKEND_ORIGIN) ||
+      ((import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '')) ||
+      'http://localhost:3000';
+
+    const absolutize = (u) => {
+      if (!u) return ''
+      if (/^https?:\/\//i.test(u)) return u
+      if (u.startsWith('/')) return `${BACKEND_ORIGIN}${u}`
+      return `${BACKEND_ORIGIN}/${u.replace(/^\/+/, '')}`
+    }
+
+    const coverUrl = (curso) => {
+      const u = curso?.portada_url || (Array.isArray(curso?.galeria_urls) && curso.galeria_urls[0]) || ''
+      return absolutize(u)
+    }
+
+    const onImageError = (e) => {
+      // ver en consola qué URL está fallando
+      console.warn('Fallo al cargar imagen:', e.target?.src)
+      e.target.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400">
+          <rect width="100%" height="100%" fill="#ecf0f1"/>
+          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#7f8c8d" font-family="Arial" font-size="20">
+            Imagen no disponible
+          </text>
+        </svg>`
+      )
+    }
+
     // Obtener cursos
     const fetchCursos = async () => {
       try {
@@ -306,28 +348,20 @@ export default {
       const total = pagination.value.totalPages
 
       if (total <= 7) {
-        for (let i = 1; i <= total; i++) {
-          pages.push(i)
-        }
+        for (let i = 1; i <= total; i++) pages.push(i)
       } else {
         if (current <= 4) {
-          for (let i = 1; i <= 5; i++) {
-            pages.push(i)
-          }
+          for (let i = 1; i <= 5; i++) pages.push(i)
           pages.push('...')
           pages.push(total)
         } else if (current >= total - 3) {
           pages.push(1)
           pages.push('...')
-          for (let i = total - 4; i <= total; i++) {
-            pages.push(i)
-          }
+          for (let i = total - 4; i <= total; i++) pages.push(i)
         } else {
           pages.push(1)
           pages.push('...')
-          for (let i = current - 1; i <= current + 1; i++) {
-            pages.push(i)
-          }
+          for (let i = current - 1; i <= current + 1; i++) pages.push(i)
           pages.push('...')
           pages.push(total)
         }
@@ -355,7 +389,9 @@ export default {
       viewCourse,
       handleProfile,
       handleLogout,
-      visiblePages
+      visiblePages,
+      coverUrl,
+      onImageError
     }
   }
 }
@@ -570,6 +606,14 @@ export default {
   align-items: center;
   justify-content: center;
   color: #7f8c8d;
+  overflow: hidden;
+}
+
+.course-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .course-content {
