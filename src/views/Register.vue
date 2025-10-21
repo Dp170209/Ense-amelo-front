@@ -1,43 +1,26 @@
 <template>
   <div class="register-page">
-    <!-- Header superior -->
-    <div class="header">
-      <div class="container">
-        <div class="header-content">
-          <div class="header-left">
-            <h1>Registro</h1>
-            <p class="header-subtitle">Image</p>
-          </div>
-        </div>
+    <div class="auth-wrapper">
+      <!-- Branding (mismo que login) -->
+      <div class="brand">
+        <img class="brand-logo" src="../assets/logo3.png" alt="Enseñamelo" />
+        <div class="brand-name">ENSEÑAMELO</div>
       </div>
-    </div>
 
-    <!-- Banner principal -->
-    <div class="banner">
-      <div class="container">
-        <div class="banner-content">
-          <div class="logo-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9M19 9H14V4H5V21H19V9Z"/>
-            </svg>
-          </div>
-          <div class="logo-text">ENSEÑAMELO</div>
-        </div>
-      </div>
-    </div>
+      <!-- Caja de formulario -->
+      <div class="form-box">
+        <h2>Crea tu cuenta</h2>
+        <p class="subtitle">Completa tus datos para registrarte</p>
 
-    <!-- Contenido principal -->
-    <div class="main-content">
-      <div class="form-container">
-        <div class="form-box">
-          <form @submit.prevent="handleRegister">
+        <form @submit.prevent="handleRegister" novalidate>
+          <div class="two-col">
             <div class="form-group">
               <label class="form-label">Nombre</label>
               <input
                 type="text"
                 class="form-input"
-                placeholder="Ingrese su nombre"
-                v-model="form.nombre"
+                placeholder="Ej.: María"
+                v-model.trim="form.nombre"
                 required
               />
             </div>
@@ -47,89 +30,113 @@
               <input
                 type="text"
                 class="form-input"
-                placeholder="Ingrese su apellido"
-                v-model="form.apellido"
+                placeholder="Ej.: López"
+                v-model.trim="form.apellido"
                 required
               />
             </div>
+          </div>
 
-            <div class="form-group">
-              <label class="form-label">Correo electronico</label>
-              <input
-                type="email"
-                class="form-input"
-                placeholder="Ingrese su email"
-                v-model="form.email"
-                required
-              />
-            </div>
+          <div class="form-group">
+            <label class="form-label">Correo electrónico</label>
+            <input
+              type="email"
+              class="form-input"
+              placeholder="tu@email.com"
+              v-model.trim="form.email"
+              autocomplete="email"
+              required
+            />
+          </div>
 
-            <div class="form-group">
-              <label class="form-label">Teléfono</label>
-              <input
-                type="tel"
-                class="form-input"
-                placeholder="Ingrese su teléfono"
-                v-model="form.telefono"
-                required
-              />
-            </div>
+          <div class="form-group">
+            <label class="form-label">Teléfono (opcional)</label>
+            <input
+              type="tel"
+              class="form-input"
+              placeholder="+51 999 888 777"
+              v-model.trim="form.telefono"
+              autocomplete="tel"
+            />
+          </div>
 
+          <div class="two-col">
             <div class="form-group">
               <label class="form-label">Contraseña</label>
-              <input
-                type="password"
-                class="form-input"
-                placeholder="Mínimo 6 caracteres"
-                v-model="form.password"
-                required
-              />
+              <div class="input-with-icon">
+                <input
+                  :type="showPass ? 'text' : 'password'"
+                  class="form-input"
+                  placeholder="Mínimo 6 caracteres"
+                  v-model="form.password"
+                  autocomplete="new-password"
+                  required
+                />
+                <button
+                  type="button"
+                  class="icon-btn"
+                  @click="showPass = !showPass"
+                  :aria-label="showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <svg v-if="!showPass" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.1 3.51 3.5 2.1l18.4 18.4-1.41 1.41-3.05-3.05A12.6 12.6 0 0 1 12 19c-7 0-10-7-10-7a20.3 20.3 0 0 1 5.12-6.16L2.1 3.51ZM12 7c7 0 10 7 10 7a20.9 20.9 0 0 1-4.23 5.36l-2.04-2.04A5 5 0 0 0 9.68 9.28L7.64 7.24A12.6 12.6 0 0 1 12 7Zm0 3a3 3 0 0 1 3 3c0 .47-.11.9-.3 1.3L10.7 10.3c.4-.19.83-.3 1.3-.3Z"/>
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Confirmar Contraseña</label>
-              <input
-                type="password"
-                class="form-input"
-                placeholder="Confirme su contraseña"
-                v-model="form.confirmPassword"
-                required
-              />
-            </div>
-
-            <div class="checkbox-group">
-              <p class="checkbox-title">Tipo de Usuario</p>
-              <div class="checkbox-item">
+              <label class="form-label">Confirmar contraseña</label>
+              <div class="input-with-icon">
                 <input
-                  type="checkbox"
-                  id="estudiante"
-                  class="checkbox-input"
-                  v-model="form.rol"
-                  value="estudiante"
+                  :type="showConfirm ? 'text' : 'password'"
+                  class="form-input"
+                  placeholder="Repite tu contraseña"
+                  v-model="form.confirmPassword"
+                  autocomplete="new-password"
+                  required
                 />
-                <label for="estudiante" class="checkbox-label">Estudiante</label>
-              </div>
-              <div class="checkbox-item">
-                <input
-                  type="checkbox"
-                  id="docente"
-                  class="checkbox-input"
-                  v-model="form.rol"
-                  value="docente"
-                />
-                <label for="docente" class="checkbox-label">Docente</label>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  @click="showConfirm = !showConfirm"
+                  :aria-label="showConfirm ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <svg v-if="!showConfirm" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.1 3.51 3.5 2.1l18.4 18.4-1.41 1.41-3.05-3.05A12.6 12.6 0 0 1 12 19c-7 0-10-7-10-7a20.3 20.3 0 0 1 5.12-6.16L2.1 3.51ZM12 7c7 0 10 7 10 7a20.9 20.9 0 0 1-4.23 5.36l-2.04-2.04A5 5 0 0 0 9.68 9.28L7.64 7.24A12.6 12.6 0 0 1 12 7Zm0 3a3 3 0 0 1 3 3c0 .47-.11.9-.3 1.3L10.7 10.3c.4-.19.83-.3 1.3-.3Z"/>
+                  </svg>
+                </button>
               </div>
             </div>
+          </div>
 
-            <button type="submit" class="btn btn-secondary" :disabled="loading">
-              {{ loading ? 'Registrando...' : 'Registrarse' }}
-            </button>
-            
-            <div class="login-link">
-              <p>¿Ya tienes cuenta? <a href="#" @click.prevent="goToLogin">Inicia sesión aquí</a></p>
-            </div>
-          </form>
-        </div>
+          <!-- Rol (radio, selección única) -->
+          <div class="role-group">
+            <p class="role-title">Tipo de usuario</p>
+            <label class="role-option">
+              <input type="radio" value="estudiante" v-model="form.rol" />
+              <span>Estudiante</span>
+            </label>
+            <label class="role-option">
+              <input type="radio" value="docente" v-model="form.rol" />
+              <span>Docente</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary" :disabled="loading">
+            {{ loading ? 'Registrando...' : 'Registrarse' }}
+          </button>
+
+          <div class="login-link">
+            <p>¿Ya tienes cuenta? <a href="#" @click.prevent="goToLogin">Inicia sesión aquí</a></p>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -151,26 +158,24 @@ export default {
       nombre: '',
       apellido: '',
       telefono: '',
-      rol: ['estudiante'] // Por defecto estudiante seleccionado
+      rol: 'estudiante' // por defecto
     })
     const loading = ref(false)
+    const showPass = ref(false)
+    const showConfirm = ref(false)
 
     const handleRegister = async () => {
-      // Validar que las contraseñas coincidan
+      // Validaciones rápidas
+      if (form.value.password.length < 6) {
+        alert('La contraseña debe tener al menos 6 caracteres')
+        return
+      }
       if (form.value.password !== form.value.confirmPassword) {
         alert('Las contraseñas no coinciden')
         return
       }
-
-      // Validar que se haya seleccionado un rol
-      if (form.value.rol.length === 0) {
-        alert('Debe seleccionar al menos un tipo de usuario')
-        return
-      }
-
-      // Validar longitud de contraseña
-      if (form.value.password.length < 6) {
-        alert('La contraseña debe tener al menos 6 caracteres')
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email)) {
+        alert('Ingresa un correo válido')
         return
       }
 
@@ -179,36 +184,36 @@ export default {
         const userData = {
           email: form.value.email,
           password: form.value.password,
-          rol: form.value.rol[0], // Tomar el primer rol seleccionado
+          rol: form.value.rol,
           nombre: form.value.nombre || 'Usuario',
           apellido: form.value.apellido || '',
-          telefono: form.value.telefono || 0
+          telefono: form.value.telefono || ''
         }
-
-        const response = await authAPI.register(userData)
-
-        if (response.data.success) {
-          alert('Registro exitoso! Por favor inicie sesión.')
+        const { data } = await authAPI.register(userData)
+        if (data.success) {
+          alert('¡Registro exitoso! Ahora puedes iniciar sesión.')
           router.push('/login')
         } else {
-          alert('Error en el registro: ' + response.data.message)
+          alert('Error en el registro: ' + (data.message || 'Intenta de nuevo'))
         }
       } catch (error) {
         console.error('Error:', error)
-        const message = error.response?.data?.message || 'Error al registrarse. El email puede estar en uso.'
+        const message =
+          error.response?.data?.message ||
+          'Error al registrarse. Es posible que el email ya esté en uso.'
         alert(message)
       } finally {
         loading.value = false
       }
     }
 
-    const goToLogin = () => {
-      router.push('/login')
-    }
+    const goToLogin = () => router.push('/login')
 
     return {
       form,
       loading,
+      showPass,
+      showConfirm,
       handleRegister,
       goToLogin
     }
@@ -217,179 +222,126 @@ export default {
 </script>
 
 <style scoped>
+/* Fondo igual al login */
 .register-page {
   min-height: 100vh;
-  background-color: #ffffff;
+  background: linear-gradient(135deg, #2c3e50 0%, #36759e 100%);
+  display: grid;
+  place-items: center;
+  padding: 34px;
 }
 
-.header {
-  background-color: #2c3e50;
-  color: white;
-  padding: 10px 0;
-}
-
-.header-left h1 {
-  font-size: 18px;
-  margin: 0;
-}
-
-.header-subtitle {
-  font-size: 12px;
-  color: #bdc3c7;
-  margin: 0;
-  margin-top: 2px;
-}
-
-.banner {
-  background-color: #36759e;
-  color: white;
-  padding: 20px 0;
-}
-
-.banner-content {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.logo-icon {
-  width: 50px;
-  height: 50px;
-  background-color: #ecf0f1;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-icon svg {
-  width: 30px;
-  height: 30px;
-  color: #2c3e50;
-}
-
-.logo-text {
-  font-size: 28px;
-  font-weight: bold;
-  letter-spacing: 1px;
-}
-
-.main-content {
-  background-color: #ffffff;
-  min-height: calc(100vh - 140px);
-}
-
-.form-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 60px 20px;
-}
-
-.form-box {
-  background-color: #90c0d8;
-  padding: 40px;
-  border-radius: 10px;
+/* Contenedor centrado (intermedio) */
+.auth-wrapper {
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 1040px;     /* ⬅️ intermedio */
+  display: grid;
+  gap: 16px;
+  justify-items: center;
 }
 
-.form-group {
-  margin-bottom: 20px;
+/* Branding */
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #ecf0f1;
+  margin: 0;
+}
+.brand-logo { width: 82px; height: auto; object-fit: contain; }
+.brand-name { font-size: 28px; font-weight: 800; letter-spacing: .5px; line-height: 1; }
+
+/* Formulario amplio y centrado (intermedio) */
+.form-box {
+  width: 100%;
+  max-width: 840px;       /* ⬅️ intermedio */
+  background: #90c0d8;
+  border-radius: 16px;
+  padding: 44px;          /* respiración cómoda */
+  box-shadow: 0 24px 60px rgba(0,0,0,.26);
+}
+.form-box h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 28px;
+  font-weight: 800;
+}
+.subtitle {
+  margin: 8px 0 24px;
+  color: #2c3e50;
+  opacity: .85;
 }
 
+/* Siempre UNA COLUMNA */
+.two-col { display: block; }
+.two-col .form-group { margin-bottom: 18px; }
+
+/* Inputs */
+.form-group { margin-bottom: 18px; }
 .form-label {
   display: block;
-  color: #2c3e50;
   margin-bottom: 8px;
-  font-weight: 500;
-  font-size: 16px;
+  color: #2c3e50;
+  font-weight: 600;
 }
-
 .form-input {
   width: 100%;
-  padding: 12px;
+  padding: 16px;
   border: none;
-  border-radius: 5px;
-  font-size: 16px;
-  background-color: white;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 17px;
   box-sizing: border-box;
+  transition: box-shadow .2s ease;
 }
+.form-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(54,117,158,.35); }
 
-.form-input:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #36759e;
+/* Input con icono (ojo) */
+.input-with-icon { position: relative; }
+.icon-btn {
+  position: absolute;
+  right: 12px; top: 50%; transform: translateY(-50%);
+  border: 0; background: transparent; width: 38px; height: 38px;
+  display: grid; place-items: center; cursor: pointer; color: #2c3e50; opacity: .85;
 }
+.icon-btn svg { width: 22px; height: 22px; }
+.icon-btn:hover { opacity: 1; }
 
-.checkbox-group {
-  margin-bottom: 20px;
-}
+/* Rol (radios) */
+.role-group { margin: 12px 0 20px; }
+.role-title { color: #2c3e50; font-weight: 600; margin-bottom: 8px; }
+.role-option { display: inline-flex; align-items: center; gap: 8px; margin-right: 18px; font-size: 16px; color: #2c3e50; }
+.role-option input { width: 16px; height: 16px; accent-color: #36759e; }
 
-.checkbox-title {
-  color: #bdc3c7;
-  font-size: 14px;
-  margin-bottom: 15px;
-  font-weight: normal;
-}
-
-.checkbox-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.checkbox-input {
-  width: 18px;
-  height: 18px;
-  accent-color: #36759e;
-}
-
-.checkbox-label {
-  color: #2c3e50;
-  font-size: 16px;
-  cursor: pointer;
-}
-
+/* Botón */
 .btn {
   width: 100%;
-  padding: 12px;
+  padding: 16px;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
   font-size: 16px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.3s;
-  font-weight: 500;
+  transition: transform .02s ease, background-color .2s ease;
 }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background-color: #365d6e; color: #fff; }
+.btn-primary:hover { background-color: #2c4a5a; }
 
-.btn-secondary {
-  background-color: #2c3e50;
-  color: white;
-}
+/* Link a login */
+.login-link { text-align: center; margin-top: 14px; }
+.login-link p { margin: 0; color: #2c3e50; font-size: 14px; }
+.login-link a { color: #36759e; text-decoration: underline; font-weight: 600; }
+.login-link a:hover { text-decoration: none; }
 
-.btn-secondary:hover {
-  background-color: #34495e;
-}
-
-.login-link {
-  text-align: center;
-  margin-top: 20px;
-}
-
-.login-link p {
-  color: #2c3e50;
-  font-size: 14px;
-  margin: 0;
-}
-
-.login-link a {
-  color: #36759e;
-  text-decoration: underline;
-  font-weight: 500;
-}
-
-.login-link a:hover {
-  text-decoration: none;
+/* Responsivo */
+@media (max-width: 640px) {
+  .form-box { max-width: 100%; padding: 28px 22px 24px; }
+  .brand-logo { width: 70px; }
+  .brand-name { font-size: 24px; }
 }
 </style>
+
+
+
