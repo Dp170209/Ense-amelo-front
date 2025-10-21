@@ -1,10 +1,13 @@
 <template>
   <div class="register-page">
     <div class="auth-wrapper">
-      <!-- Branding (mismo que login) -->
-      <div class="brand">
-        <img class="brand-logo" src="../assets/logo3.png" alt="Enseñamelo" />
-        <div class="brand-name">ENSEÑAMELO</div>
+      <!-- Grupo ajustable: mueve el brand con --brand-offset-x / --brand-offset-y -->
+      <!-- Ejemplo rápido: style="--brand-offset-x:-18px; --brand-offset-y:4px;" -->
+      <div class="brand-group" style="--brand-offset-x:-18px;">
+        <div class="brand" aria-label="Enseñamelo branding">
+          <img class="brand-logo" src="../assets/logo3.png" alt="Enseñamelo" />
+          <div class="brand-name">ENSEÑAMELO</div>
+        </div>
       </div>
 
       <!-- Caja de formulario -->
@@ -116,7 +119,7 @@
             </div>
           </div>
 
-          <!-- Rol (radio, selección única) -->
+          <!-- Rol -->
           <div class="role-group">
             <p class="role-title">Tipo de usuario</p>
             <label class="role-option">
@@ -158,14 +161,13 @@ export default {
       nombre: '',
       apellido: '',
       telefono: '',
-      rol: 'estudiante' // por defecto
+      rol: 'estudiante'
     })
     const loading = ref(false)
     const showPass = ref(false)
     const showConfirm = ref(false)
 
     const handleRegister = async () => {
-      // Validaciones rápidas
       if (form.value.password.length < 6) {
         alert('La contraseña debe tener al menos 6 caracteres')
         return
@@ -231,34 +233,64 @@ export default {
   padding: 34px;
 }
 
-/* Contenedor centrado (intermedio) */
+/* Contenedor centrado */
 .auth-wrapper {
   width: 100%;
-  max-width: 1040px;     /* ⬅️ intermedio */
+  max-width: 1040px;
   display: grid;
   gap: 16px;
   justify-items: center;
 }
 
-/* Branding */
-.brand {
+/* ===== Grupo del brand con offsets configurables ===== */
+.brand-group {
+  width: 100%;
+  max-width: 840px; /* mismo ancho visual que el form */
+  align-self: center;
+
+  /* offsets editables por ti */
+  --brand-offset-x: 0px;   /* izquierda(-) / derecha(+) */
+  --brand-offset-y: 0px;   /* arriba(-) / abajo(+) */
+
   display: flex;
+  justify-content: center;
+  transform: translate(var(--brand-offset-x), var(--brand-offset-y));
+}
+
+/* Branding (sin burbuja) */
+.brand {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;                 /* logo pegado al título */
   color: #ecf0f1;
-  margin: 0;
+  user-select: none;
+  transform: translateY(18px);
 }
-.brand-logo { width: 82px; height: auto; object-fit: contain; }
-.brand-name { font-size: 28px; font-weight: 800; letter-spacing: .5px; line-height: 1; }
 
-/* Formulario amplio y centrado (intermedio) */
+.brand-logo {
+  width: 120px;             /* un poco más grande */
+  height: auto;
+  object-fit: contain;
+  border-radius: 0;
+  box-shadow: none;
+  transform: translateY(12px);
+}
+
+.brand-name {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  line-height: 1;
+}
+
+/* Formulario amplio y centrado */
 .form-box {
   width: 100%;
-  max-width: 840px;       /* ⬅️ intermedio */
+  max-width: 840px;
   background: #90c0d8;
   border-radius: 16px;
-  padding: 44px;          /* respiración cómoda */
+  padding: 44px;
   box-shadow: 0 24px 60px rgba(0,0,0,.26);
 }
 .form-box h2 {
@@ -273,18 +305,14 @@ export default {
   opacity: .85;
 }
 
-/* Siempre UNA COLUMNA */
+/* Siempre una columna */
 .two-col { display: block; }
 .two-col .form-group { margin-bottom: 18px; }
 
 /* Inputs */
 .form-group { margin-bottom: 18px; }
-.form-label {
-  display: block;
-  margin-bottom: 8px;
-  color: #2c3e50;
-  font-weight: 600;
-}
+.form-label { display: block; margin-bottom: 8px; color: #2c3e50; font-weight: 600; }
+
 .form-input {
   width: 100%;
   padding: 16px;
@@ -300,8 +328,7 @@ export default {
 /* Input con icono (ojo) */
 .input-with-icon { position: relative; }
 .icon-btn {
-  position: absolute;
-  right: 12px; top: 50%; transform: translateY(-50%);
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
   border: 0; background: transparent; width: 38px; height: 38px;
   display: grid; place-items: center; cursor: pointer; color: #2c3e50; opacity: .85;
 }
@@ -338,10 +365,8 @@ export default {
 /* Responsivo */
 @media (max-width: 640px) {
   .form-box { max-width: 100%; padding: 28px 22px 24px; }
-  .brand-logo { width: 70px; }
+  .brand-group { max-width: 100%; }
+  .brand-logo { width: 108px; }
   .brand-name { font-size: 24px; }
 }
 </style>
-
-
-
