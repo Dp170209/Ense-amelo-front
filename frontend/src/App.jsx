@@ -12,32 +12,52 @@ import PanelTutor from "./components/PanelTutor";
 import ConfigurarCurso from "./components/Tutor/ConfigurarCurso";
 import PerfilTutor from "./components/PerfilTutor";
 import EditarPerfilTutor from "./components/EditarPerfilTutor";
+import PanelAdmin from "./components/Admin/PanelAdmin";
 
 function App() {
   return (
     <div className="min-h-screen bg-slate-100">
       <Routes>
+        {/* Redirección raíz (opcional) */}
+        <Route path="/" element={<Navigate to="/explorar" replace />} />
 
         {/* Login y registro */}
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
         <Route path="/registro-tutor" element={<RegistroTutor />} />
 
+        {/* Panel admin (solicitudes de tutores) */}
+        <Route
+          path="/admin/solicitudes-tutores"
+          element={
+            <>
+              <Navbar currentSection="admin" adminMode />
+              <PanelAdmin />
+            </>
+          }
+        />
+
         {/* Explorar */}
-        <Route path="/explorar" element={
-          <>
-            <Navbar currentSection="explore" />
-            <Explorar />
-          </>
-        }/>
+        <Route
+          path="/explorar"
+          element={
+            <>
+              <Navbar currentSection="explore" />
+              <Explorar />
+            </>
+          }
+        />
 
         {/* Mis cursos */}
-        <Route path="/mis-cursos" element={
-          <>
-            <Navbar currentSection="courses" />
-            <MisCursos />
-          </>
-        }/>
+        <Route
+          path="/mis-cursos"
+          element={
+            <>
+              <Navbar currentSection="courses" />
+              <MisCursos />
+            </>
+          }
+        />
 
         {/* Perfil */}
         <Route path="/perfil" element={
@@ -52,14 +72,6 @@ function App() {
           <>
             <Navbar currentSection="profile" />
             <EditarPerfilEstudiante />
-          </>
-        }/>
-
-        {/* Info de curso */}
-        <Route path="/curso/:id" element={
-          <>
-            <Navbar currentSection="courses" />
-            <InfoCurso />
           </>
         }/>
 

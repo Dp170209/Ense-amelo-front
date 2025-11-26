@@ -35,7 +35,7 @@ const LoginForm = () => {
                 if (rolCodigo === 2 || rol === "docente") {
                     targetPath = "/panel-tutor";
                 } else if (rolCodigo === 3 || rol === "admin") {
-                    targetPath = "/admin";
+                    targetPath = "/admin/solicitudes-tutores";
                 }
 
                 navigate(targetPath, { replace: true });
