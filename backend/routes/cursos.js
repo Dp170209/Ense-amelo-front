@@ -122,13 +122,18 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Buscar perfil de tutor
-    const perfilTutor = await PerfilTutor.findOne({ id_usuario: req.user.userId });
+    // Buscar perfil de tutor, si no existe lo creamos automáticamente
+    let perfilTutor = await PerfilTutor.findOne({ id_usuario: req.user.userId });
     if (!perfilTutor) {
-      return res.status(400).json({
-        success: false,
-        message: 'Debe tener un perfil de tutor para crear cursos'
+      const autoCi = `AUTO-${String(req.user.userId).slice(-6)}`;
+
+      perfilTutor = new PerfilTutor({
+        id_usuario: req.user.userId,
+        ci: autoCi,
+        biografia: ''
       });
+
+      await perfilTutor.save();
     }
 
     const cursoData = {

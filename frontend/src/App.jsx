@@ -5,9 +5,13 @@ import Explorar from "./components/Explorar/Explorar";
 import MisCursos from "./components/MisCursos/MisCursos";
 import InfoCurso from "./components/InfoCurso/InfoCurso";
 import Navbar from "./components/Navbar";
-
-// PANEL DE PAGOS
-import PaymentsDashboard from "./components/Payments-Service/PaymentDashboard";
+import PerfilEstudiante from "./components/PerfilEstudiante";
+import EditarPerfilEstudiante from "./components/EditarPerfilEstudiante";
+import RegistroTutor from "./components/RegistroTutor";
+import PanelTutor from "./components/PanelTutor";
+import ConfigurarCurso from "./components/Tutor/ConfigurarCurso";
+import PerfilTutor from "./components/PerfilTutor";
+import EditarPerfilTutor from "./components/EditarPerfilTutor";
 
 function App() {
   return (
@@ -17,7 +21,7 @@ function App() {
         {/* Login y registro */}
         <Route path="/login" element={<LoginForm />} />
         <Route path="/register" element={<RegisterForm />} />
-        <Route path="/payments-service-panel" element={<PaymentsDashboard />} />
+        <Route path="/registro-tutor" element={<RegistroTutor />} />
 
         {/* Explorar */}
         <Route path="/explorar" element={
@@ -35,6 +39,22 @@ function App() {
           </>
         }/>
 
+        {/* Perfil */}
+        <Route path="/perfil" element={
+          <>
+            <Navbar currentSection="profile" />
+            <PerfilEstudiante />
+          </>
+        }/>
+
+        {/* Editar Perfil */}
+        <Route path="/perfil/editar" element={
+          <>
+            <Navbar currentSection="profile" />
+            <EditarPerfilEstudiante />
+          </>
+        }/>
+
         {/* Info de curso */}
         <Route path="/curso/:id" element={
           <>
@@ -43,11 +63,16 @@ function App() {
           </>
         }/>
 
-        {/* PAYMENTS SERVICE PANEL */}
-        <Route path="/payments-service-panel" element={<PaymentsDashboard />} />
+        {/* Panel tutor */}
+        <Route path="/panel-tutor" element={<PanelTutor />} />
+        <Route path="/tutor/curso/nuevo" element={<ConfigurarCurso />} />
+
+        {/* Perfil tutor */}
+        <Route path="/tutor/perfil" element={<PerfilTutor />} />
+        <Route path="/tutor/perfil/editar" element={<EditarPerfilTutor />} />
 
         {/* Default */}
-        <Route path="*" element={<Navigate to="/payments-service-panel" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>
   );

@@ -1,7 +1,10 @@
 import "../../styles/InfoCurso/infoCurso.css";
 import "../../styles/InfoCurso/reviewCard.css";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/solid";
-
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import api from "../../api/config";
+import { cursosAPI } from "../../api/cursos";
 
 // 🔹 Mock de datos del curso
 const cursoMock = {
@@ -52,14 +55,39 @@ const reseñasMock = [
 ];
 
 
-const CourseInfoSection = () => {
-    const { titulo, tag, precio, resumen, descripcionLarga, tutor } = cursoMock;
+const resolvePortadaUrl = (portada) => {
+    if (!portada) return "";
+
+    if (portada.startsWith("data:")) return portada;
+    if (portada.startsWith("http://") || portada.startsWith("https://")) return portada;
+
+    if (portada.startsWith("/")) {
+        const baseApi = api.defaults.baseURL || ""; // ej: http://localhost:3000/api
+        const root = baseApi.replace(/\/+api\/?$/, ""); // -> http://localhost:3000
+        return root + portada;
+    }
+
+    return portada;
+};
+
+const CourseInfoSection = ({ curso }) => {
+    const data = curso || cursoMock;
+    const { titulo, tag, precio, resumen, descripcionLarga, tutor, portada_url } = data;
+    const portadaSrc = resolvePortadaUrl(portada_url);
 
     return (
         <section className="infocurso-layout">
             <div className="infocurso-left">
                 <div className="infocurso-media-wrapper">
-                    <div className="infocurso-media-placeholder" />
+                    {portadaSrc ? (
+                        <img
+                            src={portadaSrc}
+                            alt={titulo}
+                            className="infocurso-media-img"
+                        />
+                    ) : (
+                        <div className="infocurso-media-placeholder" />
+                    )}
 
                     <button
                         type="button"
@@ -157,7 +185,30 @@ const ReviewCard = ({ titulo, cuerpo, usuario, fecha, rating }) => {
     );
 };
 
-const ReviewsSection = () => {
+const ReviewsSection = ({ userReviews, onAddReview }) => {
+    const [titulo, setTitulo] = useState("");
+    const [cuerpo, setCuerpo] = useState("");
+    const [rating, setRating] = useState(5);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (!titulo.trim() || !cuerpo.trim()) return;
+
+        const nueva = {
+            id: Date.now(),
+            titulo: titulo.trim(),
+            cuerpo: cuerpo.trim(),
+            usuario: "Tú",
+            fecha: new Date().toLocaleDateString(),
+            rating: Number(rating) || 5,
+        };
+
+        onAddReview(nueva);
+        setTitulo("");
+        setCuerpo("");
+        setRating(5);
+    };
+
     return (
         <section className="infocurso-reviews-section">
             <h2 className="infocurso-reviews-title">Reseñas</h2>
@@ -166,17 +217,141 @@ const ReviewsSection = () => {
                 {reseñasMock.map((r) => (
                     <ReviewCard key={r.id} {...r} />
                 ))}
+                {userReviews.map((r) => (
+                    <ReviewCard key={r.id} {...r} />
+                ))}
             </div>
+
+            <form className="infocurso-review-form" onSubmit={handleSubmit}>
+                <h3 className="infocurso-review-form-title">Escribe tu reseña</h3>
+                <div className="infocurso-review-form-row">
+                    <label>
+                        Título
+                        <input
+                            type="text"
+                            value={titulo}
+                            onChange={(e) => setTitulo(e.target.value)}
+                            className="infocurso-review-input"
+                        />
+                    </label>
+                </div>
+                <div className="infocurso-review-form-row">
+                    <label>
+                        Comentario
+                        <textarea
+                            value={cuerpo}
+                            onChange={(e) => setCuerpo(e.target.value)}
+                            className="infocurso-review-textarea"
+                            rows={4}
+                        />
+                    </label>
+                </div>
+                <div className="infocurso-review-form-row">
+                    <label>
+                        Calificación
+                        <select
+                            value={rating}
+                            onChange={(e) => setRating(e.target.value)}
+                            className="infocurso-review-select"
+                        >
+                            {[5, 4, 3, 2, 1].map((v) => (
+                                <option key={v} value={v}>{v} estrellas</option>
+                            ))}
+                        </select>
+                    </label>
+                </div>
+                <button type="submit" className="infocurso-review-submit">
+                    Publicar reseña
+                </button>
+            </form>
         </section>
     );
 };
 
 const InfoCurso = () => {
+    const { id } = useParams();
+    const [curso, setCurso] = useState(null);
+    const [userReviews, setUserReviews] = useState([]);
+
+    useEffect(() => {
+        const fetchCurso = async () => {
+            if (!id) return;
+            try {
+                const { data } = await api.get(`/cursos/${id}`);
+
+                if (data?.success && data.curso) {
+                    const c = data.curso;
+
+                    const mapped = {
+                        // Campos que ya usa el layout
+                        titulo: c.nombre || cursoMock.titulo,
+                        tag:
+                            (Array.isArray(c.tags) && c.tags[0]) ||
+                            (Array.isArray(c.categorias) && c.categorias[0]?.nombre) ||
+                            cursoMock.tag,
+                        precio:
+                            typeof c.precio_reserva === "number"
+                                ? `${c.precio_reserva} Bs/hora`
+                                : cursoMock.precio,
+                        resumen: c.descripcion || cursoMock.resumen,
+                        descripcionLarga: c.descripcion || cursoMock.descripcionLarga,
+                        portada_url: c.portada_url || "",
+                        tutor: {
+                            nombre:
+                                c.id_tutor?.id_usuario?.nombre && c.id_tutor?.id_usuario?.apellido
+                                    ? `${c.id_tutor.id_usuario.nombre} ${c.id_tutor.id_usuario.apellido}`
+                                    : cursoMock.tutor.nombre,
+                            descripcion: cursoMock.tutor.descripcion,
+                            avatar:
+                                c.id_tutor?.id_usuario?.foto || cursoMock.tutor.avatar,
+                        },
+                    };
+
+                    setCurso(mapped);
+                }
+            } catch {
+                // fallback silencioso al mock
+            }
+        };
+
+        fetchCurso();
+    }, [id]);
+
+    // Cargar reseñas guardadas en localStorage para este curso
+    useEffect(() => {
+        if (!id) return;
+        try {
+            const raw = localStorage.getItem(`cursoReviews:${id}`);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    setUserReviews(parsed);
+                }
+            }
+        } catch {
+            // ignorar errores de parseo
+        }
+    }, [id]);
+
+    const handleAddReview = (review) => {
+        setUserReviews((prev) => {
+            const updated = [review, ...prev];
+            if (id) {
+                try {
+                    localStorage.setItem(`cursoReviews:${id}`, JSON.stringify(updated));
+                } catch {
+                    // ignorar errores de almacenamiento
+                }
+            }
+            return updated;
+        });
+    };
+
     return (
         <div className="infocurso-page">
             <main className="infocurso-main">
-                <CourseInfoSection />
-                <ReviewsSection />
+                <CourseInfoSection curso={curso} />
+                <ReviewsSection userReviews={userReviews} onAddReview={handleAddReview} />
             </main>
         </div>
     );

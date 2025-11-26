@@ -1,11 +1,25 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../styles/navbar.css";
 
 const Navbar = ({ currentSection }) => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [open, setOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [user, setUser] = useState(null);
     const profileMenuRef = useRef(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            try {
+                setUser(JSON.parse(storedUser));
+            } catch (e) {
+                setUser(null);
+            }
+        }
+    }, []);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -30,6 +44,21 @@ const Navbar = ({ currentSection }) => {
 
     const linkClasses = (section) =>
         "navbar-link " + (currentSection === section ? "navbar-link-active" : "");
+
+    const isTutor = user?.rolCodigo === 2 || user?.rol === "docente";
+    const isOnTutorPanel = location.pathname === "/panel-tutor";
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setProfileOpen(false);
+        navigate("/login", { replace: true });
+    };
+
+    const goToProfile = () => {
+        setProfileOpen(false);
+        navigate("/perfil");
+    };
 
     const defaultAvatarUrl =
         "https://ui-avatars.com/api/?name=U&background=CBD5F5&color=1E293B";
@@ -57,6 +86,16 @@ const Navbar = ({ currentSection }) => {
                         <Link to="/explorar" className={linkClasses("explore")}>
                             Explorar
                         </Link>
+
+                        {isTutor && !isOnTutorPanel && (
+                            <button
+                                type="button"
+                                className={linkClasses("tutor-panel")}
+                                onClick={() => navigate("/panel-tutor")}
+                            >
+                                Volver al panel tutor
+                            </button>
+                        )}
                     </nav>
 
                     <button
@@ -85,8 +124,20 @@ const Navbar = ({ currentSection }) => {
 
                     {profileOpen && (
                         <div ref={profileMenuRef} className="navbar-profile-menu">
-                            <button className="navbar-profile-item">Perfil</button>
-                            <button className="navbar-profile-item">Cerrar sesión</button>
+                            <button
+                                type="button"
+                                className="navbar-profile-item"
+                                onClick={goToProfile}
+                            >
+                                Perfil
+                            </button>
+                            <button
+                                type="button"
+                                className="navbar-profile-item"
+                                onClick={handleLogout}
+                            >
+                                Cerrar sesión
+                            </button>
                         </div>
                     )}
                 </div>
@@ -111,6 +162,18 @@ const Navbar = ({ currentSection }) => {
                     >
                         Explorar
                     </Link>
+                    {isTutor && !isOnTutorPanel && (
+                        <button
+                            type="button"
+                            className={linkClasses("tutor-panel") + " w-fit"}
+                            onClick={() => {
+                                setOpen(false);
+                                navigate("/panel-tutor");
+                            }}
+                        >
+                            Volver al panel tutor
+                        </button>
+                    )}
                 </nav>
             )}
         </header>

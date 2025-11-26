@@ -58,7 +58,16 @@ const MisCursos = () => {
         curso.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
         curso.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
         curso.tag.toLowerCase().includes(searchTerm.toLowerCase());
-      const tagsMatch = activeTags.length === 0 || true;
+
+      // Mapear estado interno del curso a etiqueta visible
+      let estadoEtiqueta = "";
+      if (curso.estado === "programado") estadoEtiqueta = "En progreso";
+      else if (curso.estado === "calificar") estadoEtiqueta = "Pendientes de calificar";
+      else if (curso.estado === "completado") estadoEtiqueta = "Completados";
+
+      const tagsMatch =
+        activeTags.length === 0 ||
+        (estadoEtiqueta && activeTags.includes(estadoEtiqueta));
 
       return textMatch && tagsMatch;
     });

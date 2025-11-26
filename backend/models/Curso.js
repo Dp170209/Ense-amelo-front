@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const urlValidator = [
   function (v) {
     // permite http(s) absoluto o rutas relativas tipo /static/cursos/...
-    return typeof v === 'string' ? /^(https?:\/\/|\/)/.test(v) : true;
+    return typeof v === 'string' ? /^(https?:\/\/|\/|data:)/.test(v) : true;
   },
   'URL de imagen inválida'
 ];
@@ -40,7 +40,7 @@ const cursoSchema = new mongoose.Schema({
     default: [],
     validate: {
       validator: function (arr) {
-        return Array.isArray(arr) ? arr.every(u => /^(https?:\/\/|\/)/.test(u)) : true;
+        return Array.isArray(arr) ? arr.every(u => /^(https?:\/\/|\/|data:)/.test(u)) : true;
       },
       message: 'Alguna URL de galería es inválida'
     }

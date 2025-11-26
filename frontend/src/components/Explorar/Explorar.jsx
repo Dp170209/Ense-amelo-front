@@ -1,74 +1,75 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Buscador from "./Buscador";
 import CursoCard from "./CursoCard";
+import { cursosAPI } from "../../api/cursos";
 import "../../styles/Explorar/explorar.css";
 
 const cursosMock = [
   {
-    id: 1,
+    id: "mock-1",
     titulo: "Python desde Cero",
     tag: "Programación",
     descripcion: "Aprende Python paso a paso sin experiencia previa.",
-    nivel: "Principiante",
-    duracion: "6 horas",
+    modalidad: "virtual",
+    precio: 0,
   },
   {
-    id: 2,
+    id: "mock-2",
     titulo: "Productividad con Notion",
     tag: "Productividad",
     descripcion: "Organiza tu vida y proyectos usando Notion.",
-    nivel: "Todos los niveles",
-    duracion: "3 horas",
+    modalidad: "virtual",
+    precio: 0,
   },
   {
-    id: 3,
+    id: "mock-3",
     titulo: "Marketing Digital para Emprendedores",
     tag: "Marketing",
     descripcion: "Publicidad, embudos y ventas online.",
-    nivel: "Intermedio",
-    duracion: "5 horas",
-  },
-  {
-    id: 4,
-    titulo: "HTML & CSS desde cero",
-    tag: "Programación",
-    descripcion: "Crea tus primeras páginas web de forma sencilla.",
-    nivel: "Principiante",
-    duracion: "4 horas",
-  },
-  {
-    id: 5,
-    titulo: "Introducción a JavaScript",
-    tag: "Programación",
-    descripcion: "Variables, funciones y DOM para empezar en JS.",
-    nivel: "Principiante",
-    duracion: "5 horas",
-  },
-  {
-    id: 6,
-    titulo: "Técnicas de estudio efectivas",
-    tag: "Productividad",
-    descripcion: "Aprende a estudiar mejor en menos tiempo.",
-    nivel: "Todos los niveles",
-    duracion: "2 horas",
-  },
-  {
-    id: 7,
-    titulo: "Branding para emprendedores",
-    tag: "Marketing",
-    descripcion: "Construye una marca sólida para tu proyecto.",
-    nivel: "Intermedio",
-    duracion: "4 horas",
+    modalidad: "virtual",
+    precio: 0,
   },
 ];
 
-const tagsMock = ["Programación", "Productividad", "Marketing"];
 const PER_PAGE = 6;
 
 const Explorar = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTags, setActiveTags] = useState([]); 
+  const [activeTags, setActiveTags] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [cursos, setCursos] = useState(cursosMock);
+
+  useEffect(() => {
+    const fetchCursos = async () => {
+      try {
+        const { data } = await cursosAPI.getCursos();
+        if (data?.success && Array.isArray(data.cursos)) {
+          const reales = data.cursos.map((curso) => ({
+            id: curso._id,
+            titulo: curso.nombre,
+            descripcion: curso.descripcion,
+            tag:
+              (Array.isArray(curso.tags) && curso.tags[0]) ||
+              (Array.isArray(curso.categorias) && curso.categorias[0]?.nombre) ||
+              "General",
+            modalidad: curso.modalidad,
+            precio: curso.precio_reserva,
+            portada: curso.portada_url,
+          }));
+
+          setCursos((prev) => {
+            const existentesIds = new Set(prev.map((c) => c.id));
+            const nuevos = reales.filter((c) => !existentesIds.has(c.id));
+            return [...prev, ...nuevos];
+          });
+        }
+      } catch (error) {
+        console.error("Error obteniendo cursos:", error);
+      }
+    };
+
+    fetchCursos();
+  }, []);
 
   const handleToggleTag = (tag) => {
     setActiveTags((prev) =>
@@ -78,7 +79,7 @@ const Explorar = () => {
   };
 
   const cursosFiltrados = useMemo(() => {
-    return cursosMock.filter((curso) => {
+    return cursos.filter((curso) => {
       const textMatch =
         searchTerm.trim() === "" ||
         curso.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -116,7 +117,7 @@ const Explorar = () => {
           setSearchTerm(value);
           setCurrentPage(1); 
         }}
-        tags={tagsMock}
+        tags={Array.from(new Set(cursos.map((c) => c.tag).filter(Boolean)))}
         activeTags={activeTags}
         onTagToggle={handleToggleTag}
         onClear={() => {

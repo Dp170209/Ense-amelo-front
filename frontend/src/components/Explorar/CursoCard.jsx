@@ -1,5 +1,6 @@
 import "../../styles/Explorar/cursoCard.css";
 import { Link } from "react-router-dom";
+import api from "../../api/config";
 
 const tagColors = {
   Programación: "tag-blue",
@@ -7,13 +8,39 @@ const tagColors = {
   Marketing: "tag-pink",
 };
 
-const CursoCard = ({ id, titulo, tag, descripcion, nivel, duracion }) => {
+const resolvePortadaUrl = (portada) => {
+  if (!portada) return "";
+
+  // Si ya es data URL o URL absoluta, se usa tal cual
+  if (portada.startsWith("data:")) return portada;
+  if (portada.startsWith("http://") || portada.startsWith("https://")) return portada;
+
+  // Si viene como "/static/cursos/..." desde el backend, le anteponemos la raíz del API
+  if (portada.startsWith("/")) {
+    const baseApi = api.defaults.baseURL || ""; // ej: http://localhost:3000/api
+    const root = baseApi.replace(/\/+api\/?$/, ""); // -> http://localhost:3000
+    return root + portada;
+  }
+
+  return portada;
+};
+
+const CursoCard = ({ id, titulo, tag, descripcion, nivel, duracion, portada }) => {
   const tagClass = tagColors[tag] || "tag-default";
+  const portadaSrc = resolvePortadaUrl(portada);
 
   return (
     <Link to={`/curso/${id}`} className="block">
       <article className="curso-card hover:shadow-md transition-shadow">
-        <div className="curso-thumb" />
+        <div className="curso-thumb">
+          {portadaSrc && (
+            <img
+              src={portadaSrc}
+              alt={titulo}
+              className="curso-thumb-img"
+            />
+          )}
+        </div>
 
         <div className="curso-content">
           <div>

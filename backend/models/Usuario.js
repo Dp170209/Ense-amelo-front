@@ -28,6 +28,12 @@ const usuarioSchema = new mongoose.Schema({
     required: true,
     maxlength: 50
   },
+  rolCodigo: {
+    type: Number,
+    required: true,
+    enum: [1, 2, 3],
+    default: 1
+  },
   rol: {
     type: String,
     required: true,
@@ -38,6 +44,10 @@ const usuarioSchema = new mongoose.Schema({
     type: String,
     default: '',
     maxlength: 100
+  },
+  documentos: {
+    type: [String],
+    default: []
   },
   fechaCreacion: {
     type: Date,
