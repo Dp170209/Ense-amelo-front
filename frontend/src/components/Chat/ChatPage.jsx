@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { chatsAPI } from "../../api/chats";
 import { reservasAPI } from "../../api/reservas";
+import { useNotification } from "../NotificationProvider";
 import ReservarHorario from "./ReservarHorario";
 import "../../styles/chat.css";
 
 const ChatPage = () => {
   const navigate = useNavigate();
   const { id: routeChatId } = useParams();
+  const { showNotification } = useNotification();
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(routeChatId || null);
   const [mensajes, setMensajes] = useState([]);
@@ -29,7 +31,6 @@ const ChatPage = () => {
           const chatsObtenidos = data.chats || [];
           setChats(chatsObtenidos);
 
-          // Cargar estado de reservas por chat
           const reservasMap = {};
           await Promise.all(
             chatsObtenidos.map(async (chat) => {
@@ -65,6 +66,11 @@ const ChatPage = () => {
         }
       } catch (error) {
         console.error("Error obteniendo chats:", error);
+        showNotification({
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudieron cargar las conversaciones'
+        });
       }
     };
 
@@ -87,6 +93,11 @@ const ChatPage = () => {
         }
       } catch (error) {
         console.error("Error obteniendo mensajes:", error);
+        showNotification({
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudieron cargar los mensajes'
+        });
       }
     };
 
@@ -116,6 +127,11 @@ const ChatPage = () => {
       }
     } catch (error) {
       console.error("Error enviando mensaje:", error);
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'No se pudo enviar el mensaje'
+      });
     }
   };
 
@@ -162,7 +178,6 @@ const ChatPage = () => {
 
   const { tutorLabel, estudianteLabel } = obtenerLabelsTutorEstudiante();
 
-  // Asumimos tutor si rolCodigo === 2 o rol === 'docente'
   const esTutorEnChatSeleccionado = !!(
     chatSeleccionado &&
     usuarioActualId &&
@@ -192,7 +207,11 @@ const ChatPage = () => {
     const estudianteId = obtenerEstudianteIdDeChat();
 
     if (!cursoId || !estudianteId || !fechaHoraReserva) {
-      window.alert("Debes completar la fecha y hora para aceptar la reserva.");
+      showNotification({
+        type: 'warning',
+        title: 'Campos incompletos',
+        message: 'Debes completar la fecha y hora para aceptar la reserva'
+      });
       return;
     }
 
@@ -205,7 +224,11 @@ const ChatPage = () => {
       });
 
       if (data?.success) {
-        window.alert("Reserva aceptada y horario creado correctamente.");
+        showNotification({
+          type: 'success',
+          title: '¡Reserva aceptada!',
+          message: 'La reserva fue aceptada y el horario creado correctamente'
+        });
         setMostrarModalReserva(false);
         if (data.reserva && chatSeleccionado) {
           setReservasPorChat((prev) => ({
@@ -214,11 +237,19 @@ const ChatPage = () => {
           }));
         }
       } else {
-        window.alert("No se pudo aceptar la reserva. Intenta nuevamente.");
+        showNotification({
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudo aceptar la reserva. Intenta nuevamente.'
+        });
       }
     } catch (error) {
       console.error("Error aceptando reserva:", error);
-      window.alert("Ocurrió un error al aceptar la reserva.");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Ocurrió un error al aceptar la reserva'
+      });
     }
   };
 
@@ -237,24 +268,35 @@ const ChatPage = () => {
       });
 
       if (data?.success && data.reserva) {
-        window.alert("Reserva rechazada correctamente.");
+        showNotification({
+          type: 'info',
+          title: 'Reserva rechazada',
+          message: 'La reserva ha sido rechazada correctamente'
+        });
         setReservasPorChat((prev) => ({
           ...prev,
           [chatSeleccionado._id]: data.reserva,
         }));
       } else {
-        window.alert("No se pudo rechazar la reserva. Intenta nuevamente.");
+        showNotification({
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudo rechazar la reserva. Intenta nuevamente.'
+        });
       }
     } catch (error) {
       console.error("Error rechazando reserva:", error);
-      window.alert("Ocurrió un error al rechazar la reserva.");
+      showNotification({
+        type: 'error',
+        title: 'Error',
+        message: 'Ocurrió un error al rechazar la reserva'
+      });
     }
   };
 
   return (
     <div className="chat-page">
       <div className="chat-container">
-        {/* Lista de chats */}
         <div className="chat-list">
           <div className="search-bar">
             <input
@@ -315,7 +357,6 @@ const ChatPage = () => {
           </div>
         </div>
 
-        {/* Mensajes */}
         <div className="chat-messages">
           {chatSeleccionado && (
             <div className="chat-messages-header">

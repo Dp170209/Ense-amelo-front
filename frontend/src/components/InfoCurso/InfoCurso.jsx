@@ -7,6 +7,7 @@ import api from "../../api/config";
 import { cursosAPI } from "../../api/cursos";
 import { chatsAPI } from "../../api/chats";
 import { reservasAPI } from "../../api/reservas";
+import { useNotification } from "../NotificationProvider";
 
 // 🔹 Mock de datos del curso
 const cursoMock = {
@@ -259,14 +260,29 @@ const ReviewCard = ({ titulo, cuerpo, usuario, fecha, rating }) => {
 };
 
 const ReviewsSection = ({ userReviews, onAddReview, puedeResenar, yaReseno }) => {
+    const { showNotification } = useNotification();
     const [titulo, setTitulo] = useState("");
     const [cuerpo, setCuerpo] = useState("");
     const [rating, setRating] = useState(5);
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!titulo.trim() || !cuerpo.trim()) return;
-        if (!puedeResenar || yaReseno) return;
+        if (!titulo.trim() || !cuerpo.trim()) {
+            showNotification({
+                type: 'warning',
+                title: 'Campos incompletos',
+                message: 'Por favor completa el título y el comentario'
+            });
+            return;
+        }
+        if (!puedeResenar || yaReseno) {
+            showNotification({
+                type: 'warning',
+                title: 'No puedes reseñar',
+                message: 'Solo puedes dejar una reseña por curso después de tomar la clase'
+            });
+            return;
+        }
 
         const nueva = {
             id: Date.now(),
@@ -278,6 +294,11 @@ const ReviewsSection = ({ userReviews, onAddReview, puedeResenar, yaReseno }) =>
         };
 
         onAddReview(nueva);
+        showNotification({
+            type: 'success',
+            title: '¡Reseña publicada!',
+            message: 'Tu reseña ha sido publicada exitosamente'
+        });
         setTitulo("");
         setCuerpo("");
         setRating(5);
@@ -352,6 +373,7 @@ const ReviewsSection = ({ userReviews, onAddReview, puedeResenar, yaReseno }) =>
 const InfoCurso = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { showNotification } = useNotification();
     const [curso, setCurso] = useState(null);
     const [userReviews, setUserReviews] = useState([]);
     const [puedeResenar, setPuedeResenar] = useState(false);
@@ -409,7 +431,7 @@ const InfoCurso = () => {
                     setCurso(mapped);
                 }
             } catch {
-                // fallback silencioso al mock
+               console.error("Error cargando curso:", error);
             }
         };
 
@@ -437,7 +459,7 @@ const InfoCurso = () => {
             setTieneReserva(data.usuario_tiene_reserva);
         }
         } catch (error) {
-        console.error("Error verificando disponibilidad:", error);
+            console.error("Error verificando disponibilidad:", error);
         }
     };
     
@@ -452,12 +474,20 @@ const InfoCurso = () => {
 
             // ⭐ Verificar disponibilidad antes de reservar
             if (!disponibilidad.tiene_disponibilidad && !tieneReserva) {
-                window.alert("Lo sentimos, este curso no tiene cupos disponibles.");
+                showNotification({
+                    type: 'warning',
+                    title: 'Curso lleno',
+                    message: 'Lo sentimos, este curso no tiene cupos disponibles'
+                });
                 return;
             }
 
             if (disponibilidad.usuario_tiene_reserva) {
-                window.alert("Ya tienes una reserva activa para este curso.");
+                showNotification({
+                    type: 'info',
+                    title: 'Reserva existente',
+                    message: 'Ya tienes una reserva activa para este curso'
+                });
                 const chatResp = await chatsAPI.createChat({ cursoId });
                 if (chatResp?.data?.success && chatResp.data.chat?._id) {
                     navigate(`/chats/${chatResp.data.chat._id}`);
@@ -471,7 +501,11 @@ const InfoCurso = () => {
                 if (chatResp?.data?.success && chatResp.data.chat?._id) {
                     navigate(`/chats/${chatResp.data.chat._id}`);
                 } else {
-                    window.alert("No se pudo abrir la conversación para este curso.");
+                    showNotification({
+                        type: 'error',
+                        title: 'Error',
+                        message: 'No se pudo abrir la conversación para este curso'
+                    });
                 }
                 return;
             }
@@ -481,9 +515,12 @@ const InfoCurso = () => {
             
             if (!reservaResp?.data?.success) {
                 const mensaje = reservaResp?.data?.message || "No se pudo crear la reserva para este curso.";
-                window.alert(mensaje);
+                showNotification({
+                    type: 'error',
+                    title: 'Error al reservar',
+                    message: mensaje
+                });
                 
-                // ⭐ Actualizar disponibilidad si falló por falta de cupos
                 if (mensaje.includes("cupos")) {
                     const { data } = await api.get(`/reservas/disponibilidad/${id}`, {
                         params: { id_usuario: JSON.parse(localStorage.getItem("user") || "{}").id }
@@ -495,15 +532,29 @@ const InfoCurso = () => {
                 return;
             }
 
+             showNotification({
+                type: 'success',
+                title: '¡Reserva creada!',
+                message: 'Tu reserva ha sido creada exitosamente'
+            });
+
             const chatResp = await chatsAPI.createChat({ cursoId });
             if (chatResp?.data?.success && chatResp.data.chat?._id) {
                 navigate(`/chats/${chatResp.data.chat._id}`);
             } else {
-                window.alert("La reserva se creó pero no se pudo abrir el chat.");
+                showNotification({
+                    type: 'warning',
+                    title: 'Reserva creada',
+                    message: 'La reserva se creó pero no se pudo abrir el chat'
+                });
             }
         } catch (error) {
             console.error("Error creando reserva/chat:", error);
-            window.alert("Ocurrió un error al crear la reserva. Intenta nuevamente.");
+            showNotification({
+                type: 'error',
+                title: 'Error',
+                message: 'Ocurrió un error al crear la reserva. Intenta nuevamente.'
+            });
         }
     };
 

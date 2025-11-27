@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/config";
 import { cursosAPI } from "../../api/cursos";
 import { uploadsAPI } from "../../api/uploads";
+import { useNotification } from "../NotificationProvider";
 import FormularioCurso from "./FormularioCurso";
 import "../../styles/configCurso.css";
 
 const ConfigurarCurso = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
+  const { showNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [previewPortada, setPreviewPortada] = useState("");
   const [previewGaleria, setPreviewGaleria] = useState([]);
@@ -19,7 +21,7 @@ const ConfigurarCurso = () => {
     modalidad: "",
     precio_reserva: 0,
     necesita_reserva: true,
-    tags: [], // usaremos este arreglo para guardar los IDs de categorías seleccionadas
+    tags: [],
     portada_url: "",
     galeria_urls: [],
     tiene_cupo_limitado: false,
@@ -39,6 +41,11 @@ const ConfigurarCurso = () => {
         }
       } catch (error) {
         console.error("Error obteniendo categorías:", error);
+        showNotification({
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudieron cargar las categorías'
+        });
       }
     };
 
@@ -65,7 +72,11 @@ const ConfigurarCurso = () => {
       }
 
       if (prev.tags.length >= 3) {
-        window.alert("Solo puedes seleccionar hasta 3 categorías.");
+        showNotification({
+          type: 'warning',
+          title: 'Límite alcanzado',
+          message: 'Solo puedes seleccionar hasta 3 categorías'
+        });
         return prev;
       }
 
@@ -90,7 +101,6 @@ const ConfigurarCurso = () => {
       for (let i = 0; i < limitedFiles.length; i += 1) {
         const file = limitedFiles[i];
 
-        // preview rápida
         const reader = new FileReader();
         reader.onload = (ev) => {
           const result = ev.target?.result;
@@ -104,7 +114,6 @@ const ConfigurarCurso = () => {
         };
         reader.readAsDataURL(file);
 
-        // subida al backend
         const { data } = await uploadsAPI.uploadImage(file);
         if (data?.success && data.url) {
           nuevasUrls.push(data.url);
@@ -120,10 +129,19 @@ const ConfigurarCurso = () => {
             maxFiles
           ),
         }));
+        showNotification({
+          type: 'success',
+          title: 'Imágenes subidas',
+          message: `${nuevasUrls.length} imagen(es) subida(s) correctamente`
+        });
       }
     } catch (error) {
       console.error("Error subiendo imágenes del curso:", error);
-      window.alert("No se pudieron subir las imágenes. Usa JPG/PNG/WebP y < 5MB.");
+      showNotification({
+        type: 'error',
+        title: 'Error al subir imágenes',
+        message: 'Usa JPG/PNG/WebP y archivos menores a 5MB'
+      });
     }
   };
 
@@ -135,11 +153,19 @@ const ConfigurarCurso = () => {
     e.preventDefault();
 
     if (!form.nombre || !form.descripcion || !form.modalidad || form.tags.length === 0) {
-      window.alert("Por favor completa todos los campos requeridos");
+      showNotification({
+        type: 'warning',
+        title: 'Campos incompletos',
+        message: 'Por favor completa todos los campos requeridos'
+      });
       return;
     }
     if (!form.precio_reserva || Number(form.precio_reserva) <= 0) {
-      window.alert("El precio debe ser mayor a 0");
+      showNotification({
+        type: 'warning',
+        title: 'Precio inválido',
+        message: 'El precio debe ser mayor a 0'
+      });
       return;
     }
 
@@ -156,7 +182,7 @@ const ConfigurarCurso = () => {
         modalidad: form.modalidad,
         precio_reserva: Number(form.precio_reserva),
         necesita_reserva: form.necesita_reserva,
-        categorias: form.tags, // IDs de categorías seleccionadas
+        categorias: form.tags,
         tags: selectedCategorias.map((cat) => cat.nombre),
         portada_url: form.portada_url || "",
         galeria_urls: Array.isArray(form.galeria_urls) ? form.galeria_urls : [],
@@ -168,14 +194,27 @@ const ConfigurarCurso = () => {
 
       if (data?.success && data.curso?._id) {
         setCursoCreadoId(data.curso._id);
-        window.alert("¡Curso creado exitosamente! Ahora envía la verificación para este curso.");
+        showNotification({
+          type: 'success',
+          title: '¡Curso creado!',
+          message: 'Tu curso ha sido creado exitosamente. Ahora envía la verificación.',
+          duration: 5000
+        });
         setOpenVerificacion(true);
       } else {
-        window.alert("Error al crear el curso");
+        showNotification({
+          type: 'error',
+          title: 'Error',
+          message: 'No se pudo crear el curso. Intenta nuevamente.'
+        });
       }
     } catch (error) {
       console.error("Error creando curso:", error);
-      window.alert("Error al crear el curso. Inténtalo de nuevo.");
+      showNotification({
+        type: 'error',
+        title: 'Error al crear curso',
+        message: 'Ocurrió un error. Por favor intenta de nuevo.'
+      });
     } finally {
       setLoading(false);
     }
@@ -324,6 +363,7 @@ const ConfigurarCurso = () => {
                       <option value="hibrida">Híbrida</option>
                     </select>
                   </div>
+                  
                   <div className="form-group">
                     <label className="form-label">
                       <input
@@ -355,8 +395,6 @@ const ConfigurarCurso = () => {
                       </p>
                     </div>
                   )}
-
-                  {/* La selección de categorías ahora se realiza en el bloque de tags/categorías */}
 
                   <div className="form-actions">
                     <button type="button" onClick={goBack} className="cancel-btn">
