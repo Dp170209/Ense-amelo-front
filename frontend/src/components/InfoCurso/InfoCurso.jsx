@@ -2,9 +2,10 @@ import "../../styles/InfoCurso/infoCurso.css";
 import "../../styles/InfoCurso/reviewCard.css";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/solid";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/config";
 import { cursosAPI } from "../../api/cursos";
+import { chatsAPI } from "../../api/chats";
 
 // 🔹 Mock de datos del curso
 const cursoMock = {
@@ -70,7 +71,7 @@ const resolvePortadaUrl = (portada) => {
     return portada;
 };
 
-const CourseInfoSection = ({ curso }) => {
+const CourseInfoSection = ({ curso, onReservar }) => {
     const data = curso || cursoMock;
     const { titulo, tag, precio, resumen, descripcionLarga, tutor, portada_url } = data;
     const portadaSrc = resolvePortadaUrl(portada_url);
@@ -141,7 +142,11 @@ const CourseInfoSection = ({ curso }) => {
 
                 <p className="infocurso-summary">{resumen}</p>
 
-                <button type="button" className="infocurso-reserve-btn">
+                <button
+                    type="button"
+                    className="infocurso-reserve-btn"
+                    onClick={onReservar}
+                >
                     Reservar
                 </button>
 
@@ -270,6 +275,7 @@ const ReviewsSection = ({ userReviews, onAddReview }) => {
 
 const InfoCurso = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [curso, setCurso] = useState(null);
     const [userReviews, setUserReviews] = useState([]);
 
@@ -284,6 +290,7 @@ const InfoCurso = () => {
 
                     const mapped = {
                         // Campos que ya usa el layout
+                        id: c._id,
                         titulo: c.nombre || cursoMock.titulo,
                         tag:
                             (Array.isArray(c.tags) && c.tags[0]) ||
@@ -316,6 +323,20 @@ const InfoCurso = () => {
 
         fetchCurso();
     }, [id]);
+
+    const handleReservar = async () => {
+        try {
+            const cursoId = curso?.id || id;
+            if (!cursoId) return;
+
+            const { data } = await chatsAPI.createChat({ cursoId });
+            if (data?.success && data.chat?._id) {
+                navigate(`/chats/${data.chat._id}`);
+            }
+        } catch (error) {
+            console.error("Error creando/abriendo chat:", error);
+        }
+    };
 
     // Cargar reseñas guardadas en localStorage para este curso
     useEffect(() => {
@@ -350,7 +371,7 @@ const InfoCurso = () => {
     return (
         <div className="infocurso-page">
             <main className="infocurso-main">
-                <CourseInfoSection curso={curso} />
+                <CourseInfoSection curso={curso} onReservar={handleReservar} />
                 <ReviewsSection userReviews={userReviews} onAddReview={handleAddReview} />
             </main>
         </div>

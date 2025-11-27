@@ -113,9 +113,9 @@ const Navbar = ({ currentSection, adminMode = false }) => {
             <Link to="/mis-cursos" className={linkClasses("courses")}>
               Mis cursos
             </Link>
-            <button className={linkClasses("chats")} disabled>
+            <Link to="/chats" className={linkClasses("chats")}>
               Chats
-            </button>
+            </Link>
             <Link to="/explorar" className={linkClasses("explore")}>
               Explorar
             </Link>
@@ -185,9 +185,13 @@ const Navbar = ({ currentSection, adminMode = false }) => {
           >
             Mis cursos
           </Link>
-          <button className={linkClasses("chats") + " w-fit"} disabled>
+          <Link
+            to="/chats"
+            className={linkClasses("chats") + " w-fit"}
+            onClick={() => setOpen(false)}
+          >
             Chats
-          </button>
+          </Link>
           <Link
             to="/explorar"
             className={linkClasses("explore") + " w-fit"}

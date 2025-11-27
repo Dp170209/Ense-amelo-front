@@ -1,0 +1,91 @@
+.chat-page {
+  @apply min-h-[calc(100vh-4rem)] bg-slate-100 flex justify-center items-start py-4;
+}
+
+.chat-container {
+  @apply w-full max-w-6xl bg-white rounded-2xl shadow-sm overflow-hidden grid grid-cols-1 md:grid-cols-[260px_minmax(0,1fr)];
+}
+
+.chat-list {
+  @apply border-r border-slate-200 bg-slate-50 flex flex-col;
+}
+
+.search-bar {
+  @apply p-3 border-b border-slate-200 flex items-center gap-2;
+}
+
+.search-bar input {
+  @apply flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500;
+}
+
+.clear-btn {
+  @apply text-lg leading-none text-slate-500 hover:text-slate-700 px-1;
+}
+
+.chat-items {
+  @apply flex-1 overflow-y-auto;
+}
+
+.chat-item {
+  @apply flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-slate-100;
+}
+
+.chat-item-active {
+  @apply bg-sky-100;
+}
+
+.chat-avatar {
+  @apply w-9 h-9 rounded-full bg-slate-300 flex items-center justify-center text-sm font-semibold text-slate-800;
+}
+
+.chat-info {
+  @apply flex-1 min-w-0;
+}
+
+.chat-name {
+  @apply text-sm font-semibold text-slate-900 truncate;
+}
+
+.chat-last-message {
+  @apply text-xs text-slate-500 truncate;
+}
+
+.chat-course {
+  @apply text-[11px] text-slate-400;
+}
+
+.chat-messages {
+  @apply flex flex-col h-[480px] md:h-[540px];
+}
+
+.messages-container {
+  @apply flex-1 overflow-y-auto px-4 py-3 bg-slate-50;
+}
+
+.message {
+  @apply flex mb-2;
+}
+
+.own-message {
+  @apply justify-end;
+}
+
+.message-bubble {
+  @apply max-w-[75%] rounded-2xl px-3 py-2 text-sm bg-white text-slate-900 shadow;
+}
+
+.own-message .message-bubble {
+  @apply bg-sky-600 text-white;
+}
+
+.message-input {
+  @apply border-t border-slate-200 px-3 py-2 flex items-center gap-2 bg-white;
+}
+
+.message-input input {
+  @apply flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500;
+}
+
+.send-btn {
+  @apply w-9 h-9 rounded-full bg-sky-600 text-white flex items-center justify-center text-sm hover:bg-sky-700;
+}

@@ -13,6 +13,7 @@ import ConfigurarCurso from "./components/Tutor/ConfigurarCurso";
 import PerfilTutor from "./components/PerfilTutor";
 import EditarPerfilTutor from "./components/EditarPerfilTutor";
 import PanelAdmin from "./components/Admin/PanelAdmin";
+import ChatPage from "./components/Chat/ChatPage";
 
 function App() {
   return (
@@ -33,6 +34,26 @@ function App() {
             <>
               <Navbar currentSection="admin" adminMode />
               <PanelAdmin />
+            </>
+          }
+        />
+
+        {/* Chats */}
+        <Route
+          path="/chats"
+          element={
+            <>
+              <Navbar currentSection="chats" />
+              <ChatPage />
+            </>
+          }
+        />
+        <Route
+          path="/chats/:id"
+          element={
+            <>
+              <Navbar currentSection="chats" />
+              <ChatPage />
             </>
           }
         />
@@ -72,6 +93,14 @@ function App() {
           <>
             <Navbar currentSection="profile" />
             <EditarPerfilEstudiante />
+          </>
+        }/>
+
+        {/* Info de curso */}
+        <Route path="/curso/:id" element={
+          <>
+            <Navbar currentSection="courses" />
+            <InfoCurso />
           </>
         }/>
 

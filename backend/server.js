@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth');
 const cursoRoutes = require('./routes/cursos');
 const categoriaRoutes = require('./routes/categorias');
 const uploadsRoutes = require('./routes/uploads'); // <--- NUEVO
+const chatRoutes = require('./routes/chats');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use('/api/auth', authRoutes.router);
 app.use('/api/cursos', cursoRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/uploads', uploadsRoutes); // <--- NUEVO (endpoint de subida)
+app.use('/api/chats', chatRoutes);
 
 // Servir archivos estáticos subidos (URLs públicas)
 // Ej: http://localhost:3000/static/cursos/<archivo>.jpg
