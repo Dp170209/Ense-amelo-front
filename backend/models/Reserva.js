@@ -14,7 +14,7 @@ const reservaSchema = new mongoose.Schema({
   id_horario: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Horario',
-    required: true
+    required: false
   },
   pago: {
     type: Boolean,
@@ -27,7 +27,7 @@ const reservaSchema = new mongoose.Schema({
   },
   fecha: {
     type: Date,
-    required: true
+    required: false
   },
   fechaCreacion: {
     type: Date,

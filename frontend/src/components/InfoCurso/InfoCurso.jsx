@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import api from "../../api/config";
 import { cursosAPI } from "../../api/cursos";
 import { chatsAPI } from "../../api/chats";
+import { reservasAPI } from "../../api/reservas";
 
 // 🔹 Mock de datos del curso
 const cursoMock = {
@@ -329,12 +330,23 @@ const InfoCurso = () => {
             const cursoId = curso?.id || id;
             if (!cursoId) return;
 
-            const { data } = await chatsAPI.createChat({ cursoId });
-            if (data?.success && data.chat?._id) {
-                navigate(`/chats/${data.chat._id}`);
+            // 1) Crear reserva pendiente para este curso
+            const reservaResp = await reservasAPI.createReserva({ cursoId });
+            if (!reservaResp?.data?.success) {
+                window.alert("No se pudo crear la reserva para este curso.");
+                return;
+            }
+
+            // 2) Crear u obtener el chat asociado al curso y estudiante actual
+            const chatResp = await chatsAPI.createChat({ cursoId });
+            if (chatResp?.data?.success && chatResp.data.chat?._id) {
+                navigate(`/chats/${chatResp.data.chat._id}`);
+            } else {
+                window.alert("La reserva se creó pero no se pudo abrir el chat.");
             }
         } catch (error) {
-            console.error("Error creando/abriendo chat:", error);
+            console.error("Error creando reserva/chat:", error);
+            window.alert("Ocurrió un error al crear la reserva. Intenta nuevamente.");
         }
     };
 

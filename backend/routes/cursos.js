@@ -37,7 +37,7 @@ router.get('/', async (req, res) => {
 
     // Obtener cursos con información del tutor
     const cursos = await Curso.find(filters)
-      .populate('id_tutor', 'id_usuario clasificacion')
+      .populate('id_tutor', 'id_usuario clasificacion verificado')
       .populate('categorias', 'nombre')
       .populate({
         path: 'id_tutor',
@@ -71,6 +71,42 @@ router.get('/', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor'
+    });
+  }
+});
+
+// Obtener cursos del tutor autenticado
+router.get('/mis', authenticateToken, async (req, res) => {
+  try {
+    // Traer cursos activos con su perfil de tutor y usuario
+    const cursosDb = await Curso.find({ activo: true })
+      .populate({
+        path: 'id_tutor',
+        populate: {
+          path: 'id_usuario',
+          select: '_id',
+        },
+      })
+      .populate('categorias', 'nombre')
+      .sort({ creado: -1 });
+
+    // Filtrar solo los que pertenecen al usuario autenticado
+    const cursos = cursosDb.filter(
+      (c) =>
+        c.id_tutor &&
+        c.id_tutor.id_usuario &&
+        String(c.id_tutor.id_usuario._id) === String(req.user.userId)
+    );
+
+    res.json({
+      success: true,
+      cursos,
+    });
+  } catch (error) {
+    console.error('Error obteniendo cursos del tutor:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
     });
   }
 });

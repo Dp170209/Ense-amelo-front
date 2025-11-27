@@ -366,19 +366,27 @@
 }
 
 .calendar-day {
-  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  color: #2c3e50;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
   cursor: pointer;
-  border-radius: 4px;
-  transition: background-color 0.3s;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .calendar-day:hover {
-  background-color: #ecf0f1;
+  background-color: #e2e8f0;
+}
+
+.calendar-day-reservado {
+  background-color: #34d399;
+  color: #ffffff;
+}
+
+.calendar-day-reservado:hover {
+  background-color: #10b981;
 }
 
 .calendar-actions {

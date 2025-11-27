@@ -82,6 +82,12 @@ const cursoSchema = new mongoose.Schema({
     type: String,
     maxlength: 20
   }],
+  // Estado de verificación específico del curso
+  verificacion_estado: {
+    type: String,
+    enum: ['no_solicitado', 'pendiente', 'aceptado', 'rechazado'],
+    default: 'no_solicitado',
+  },
   activo: {
     type: Boolean,
     default: true

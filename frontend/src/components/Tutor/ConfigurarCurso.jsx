@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/config";
 import { cursosAPI } from "../../api/cursos";
 import { uploadsAPI } from "../../api/uploads";
+import FormularioCurso from "./FormularioCurso";
 import "../../styles/configCurso.css";
 
 const ConfigurarCurso = () => {
@@ -17,12 +18,13 @@ const ConfigurarCurso = () => {
     modalidad: "",
     precio_reserva: 0,
     necesita_reserva: true,
-    categoria: "",
-    tags: [],
+    tags: [], // usaremos este arreglo para guardar los IDs de categorías seleccionadas
     portada_url: "",
   });
 
   const [categorias, setCategorias] = useState([]);
+  const [openVerificacion, setOpenVerificacion] = useState(false);
+  const [cursoCreadoId, setCursoCreadoId] = useState(null);
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -47,18 +49,27 @@ const ConfigurarCurso = () => {
     }));
   };
 
-  const handleAddTag = () => {
-    const tag = window.prompt("Ingresa el tag:");
-    if (tag && tag.trim() && !form.tags.includes(tag.trim())) {
-      setForm((prev) => ({ ...prev, tags: [...prev.tags, tag.trim()] }));
-    }
-  };
+  const toggleCategoriaTag = (categoriaId) => {
+    setForm((prev) => {
+      const alreadySelected = prev.tags.includes(categoriaId);
 
-  const handleRemoveTag = (index) => {
-    setForm((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((_, i) => i !== index),
-    }));
+      if (alreadySelected) {
+        return {
+          ...prev,
+          tags: prev.tags.filter((id) => id !== categoriaId),
+        };
+      }
+
+      if (prev.tags.length >= 3) {
+        window.alert("Solo puedes seleccionar hasta 3 categorías.");
+        return prev;
+      }
+
+      return {
+        ...prev,
+        tags: [...prev.tags, categoriaId],
+      };
+    });
   };
 
   const handlePickPortada = async (e) => {
@@ -92,7 +103,7 @@ const ConfigurarCurso = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.nombre || !form.descripcion || !form.modalidad || !form.categoria) {
+    if (!form.nombre || !form.descripcion || !form.modalidad || form.tags.length === 0) {
       window.alert("Por favor completa todos los campos requeridos");
       return;
     }
@@ -104,22 +115,27 @@ const ConfigurarCurso = () => {
     try {
       setLoading(true);
 
+      const selectedCategorias = categorias.filter((cat) =>
+        form.tags.includes(cat._id)
+      );
+
       const payload = {
         nombre: form.nombre,
         descripcion: form.descripcion,
         modalidad: form.modalidad,
         precio_reserva: Number(form.precio_reserva),
         necesita_reserva: form.necesita_reserva,
-        categorias: [form.categoria],
-        tags: form.tags,
+        categorias: form.tags, // IDs de categorías seleccionadas
+        tags: selectedCategorias.map((cat) => cat.nombre),
         portada_url: form.portada_url || "",
       };
 
       const { data } = await cursosAPI.createCurso(payload);
 
-      if (data?.success) {
-        window.alert("¡Curso creado exitosamente!");
-        navigate("/panel-tutor");
+      if (data?.success && data.curso?._id) {
+        setCursoCreadoId(data.curso._id);
+        window.alert("¡Curso creado exitosamente! Ahora envía la verificación para este curso.");
+        setOpenVerificacion(true);
       } else {
         window.alert("Error al crear el curso");
       }
@@ -135,18 +151,19 @@ const ConfigurarCurso = () => {
 
   return (
     <div className="config-curso-page">
-      <div className="header">
-        <div className="container">
-          <div className="header-content">
-            <div className="header-left">
-              <h1>Configuración Curso (Docente)</h1>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="main-content">
         <div className="container">
+          <div className="config-curso-header-simple">
+            <h1>Configuración Curso (Docente)</h1>
+            <button
+              type="button"
+              className="verificacion-btn"
+              onClick={() => setOpenVerificacion(true)}
+            >
+              Verificar cuenta de tutor
+            </button>
+          </div>
+
           <div className="form-container">
             <form onSubmit={handleSubmit} className="config-curso-form">
               <div className="form-layout">
@@ -205,27 +222,24 @@ const ConfigurarCurso = () => {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Tag</label>
+                    <label className="form-label">Categorías (hasta 3)</label>
                     <div className="tag-container">
-                      <div className="tag-display">
-                        <span className="tag-text">Tag</span>
-                        <button type="button" onClick={handleAddTag} className="add-tag-btn">
-                          +
-                        </button>
-                      </div>
                       <div className="tags-list">
-                        {form.tags.map((tag, index) => (
-                          <div key={index} className="tag-item">
-                            {tag}
+                        {categorias.map((cat) => {
+                          const selected = form.tags.includes(cat._id);
+                          return (
                             <button
+                              key={cat._id}
                               type="button"
-                              onClick={() => handleRemoveTag(index)}
-                              className="remove-tag"
+                              className={
+                                "tag-item " + (selected ? "tag-item-selected" : "")
+                              }
+                              onClick={() => toggleCategoriaTag(cat._id)}
                             >
-                              ×
+                              {cat.nombre}
                             </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -276,23 +290,7 @@ const ConfigurarCurso = () => {
                     </select>
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Categoría</label>
-                    <select
-                      className="form-select"
-                      name="categoria"
-                      value={form.categoria}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Seleccionar categoría</option>
-                      {categorias.map((cat) => (
-                        <option key={cat._id} value={cat._id}>
-                          {cat.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* La selección de categorías ahora se realiza en el bloque de tags/categorías */}
 
                   <div className="form-actions">
                     <button type="button" onClick={goBack} className="cancel-btn">
@@ -308,6 +306,12 @@ const ConfigurarCurso = () => {
           </div>
         </div>
       </div>
+
+      <FormularioCurso
+        open={openVerificacion}
+        onClose={() => setOpenVerificacion(false)}
+        cursoId={cursoCreadoId}
+      />
     </div>
   );
 };

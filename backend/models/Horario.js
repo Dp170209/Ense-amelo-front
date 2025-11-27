@@ -14,10 +14,6 @@ const horarioSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  disponible: {
-    type: Boolean,
-    default: true
-  },
   fechaCreacion: {
     type: Date,
     default: Date.now

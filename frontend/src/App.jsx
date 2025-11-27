@@ -8,7 +8,7 @@ import Navbar from "./components/Navbar";
 import PerfilEstudiante from "./components/PerfilEstudiante";
 import EditarPerfilEstudiante from "./components/EditarPerfilEstudiante";
 import RegistroTutor from "./components/RegistroTutor";
-import PanelTutor from "./components/PanelTutor";
+import PanelTutor from "./components/Tutor/PanelTutor";
 import ConfigurarCurso from "./components/Tutor/ConfigurarCurso";
 import PerfilTutor from "./components/PerfilTutor";
 import EditarPerfilTutor from "./components/EditarPerfilTutor";
@@ -105,8 +105,24 @@ function App() {
         }/>
 
         {/* Panel tutor */}
-        <Route path="/panel-tutor" element={<PanelTutor />} />
-        <Route path="/tutor/curso/nuevo" element={<ConfigurarCurso />} />
+        <Route
+          path="/panel-tutor"
+          element={
+            <>
+              <Navbar currentSection="tutor-panel" />
+              <PanelTutor />
+            </>
+          }
+        />
+        <Route
+          path="/tutor/curso/nuevo"
+          element={
+            <>
+              <Navbar currentSection="tutor-panel" />
+              <ConfigurarCurso />
+            </>
+          }
+        />
 
         {/* Perfil tutor */}
         <Route path="/tutor/perfil" element={<PerfilTutor />} />

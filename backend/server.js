@@ -11,6 +11,8 @@ const cursoRoutes = require('./routes/cursos');
 const categoriaRoutes = require('./routes/categorias');
 const uploadsRoutes = require('./routes/uploads'); // <--- NUEVO
 const chatRoutes = require('./routes/chats');
+const verificarRoutes = require('./routes/verificar');
+const reservasRoutes = require('./routes/reservas');
 
 const app = express();
 
@@ -38,10 +40,13 @@ app.use('/api/cursos', cursoRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/uploads', uploadsRoutes); // <--- NUEVO (endpoint de subida)
 app.use('/api/chats', chatRoutes);
+app.use('/api/verificar', verificarRoutes);
+app.use('/api/reservas', reservasRoutes);
 
 // Servir archivos estáticos subidos (URLs públicas)
 // Ej: http://localhost:3000/static/cursos/<archivo>.jpg
 app.use('/static/cursos', express.static(path.join(__dirname, 'uploads', 'cursos')));
+app.use('/static/verificaciones', express.static(path.join(__dirname, 'uploads', 'verificaciones')));
 
 // Ruta de prueba
 app.get('/api/test', (req, res) => {

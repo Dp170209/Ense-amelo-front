@@ -222,6 +222,11 @@
   gap: 8px;
 }
 
+.tag-item-selected {
+  background-color: #27ae60;
+  color: #ffffff;
+}
+
 .remove-tag {
   background: none;
   border: none;
