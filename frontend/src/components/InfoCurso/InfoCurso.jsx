@@ -19,7 +19,7 @@ const cursoMock = {
         "Aquí irá una descripción más extensa del curso. Puedes explicar qué aprenderá el estudiante, qué temas se cubren y cómo se organiza el contenido.",
     tutor: {
         nombre: "Nombre del tutor",
-        descripcion: "Descripción corta del tutor",
+        descripcion: "Soy un tutor nuevo",
         avatar:
             "https://ui-avatars.com/api/?name=Tutor&background=0EA5E9&color=0F172A",
     },
@@ -72,10 +72,26 @@ const resolvePortadaUrl = (portada) => {
     return portada;
 };
 
-const CourseInfoSection = ({ curso, onReservar }) => {
+const CourseInfoSection = ({ curso, onReservar, tieneReserva }) => {
     const data = curso || cursoMock;
-    const { titulo, tag, precio, resumen, descripcionLarga, tutor, portada_url } = data;
+    const {
+        titulo,
+        tag,
+        precio,
+        resumen,
+        tutor,
+        portada_url,
+        categoriasNombres = [],
+        modalidad,
+    } = data;
     const portadaSrc = resolvePortadaUrl(portada_url);
+
+    const colorClasses = [
+        "infocurso-chip-color-1",
+        "infocurso-chip-color-2",
+        "infocurso-chip-color-3",
+        "infocurso-chip-color-4",
+    ];
 
     return (
         <section className="infocurso-layout">
@@ -134,7 +150,35 @@ const CourseInfoSection = ({ curso, onReservar }) => {
             <div className="infocurso-info">
                 <h1 className="infocurso-title">{titulo}</h1>
 
-                {tag && <span className="infocurso-tag">{tag}</span>}
+                {/* Fila de categorías */}
+                <div className="infocurso-chips-row">
+                    {Array.isArray(categoriasNombres) && categoriasNombres.length > 0
+                        ? categoriasNombres.map((cat, index) => (
+                              <span
+                                  key={cat}
+                                  className={
+                                      "infocurso-chip " +
+                                      colorClasses[index % colorClasses.length]
+                                  }
+                              >
+                                  {cat}
+                              </span>
+                          ))
+                        : tag && (
+                              <span className="infocurso-chip infocurso-chip-color-1">
+                                  {tag}
+                              </span>
+                          )}
+                </div>
+
+                {/* Fila de modalidad */}
+                {modalidad && (
+                    <div className="infocurso-chips-row">
+                        <span className="infocurso-chip infocurso-chip-modalidad">
+                            {modalidad}
+                        </span>
+                    </div>
+                )}
 
                 <div className="infocurso-price-row">
                     <span className="infocurso-arrow">→</span>
@@ -148,15 +192,10 @@ const CourseInfoSection = ({ curso, onReservar }) => {
                     className="infocurso-reserve-btn"
                     onClick={onReservar}
                 >
-                    Reservar
+                    {tieneReserva ? "Ver conversación" : "Reservar"}
                 </button>
 
-                <div className="infocurso-description-block">
-                    <h2 className="infocurso-description-title">
-                        Descripción del curso
-                    </h2>
-                    <p className="infocurso-description-text">{descripcionLarga}</p>
-                </div>
+                {/* La descripción detallada ya se muestra en el resumen para evitar duplicados */}
             </div>
         </section>
     );
@@ -191,7 +230,7 @@ const ReviewCard = ({ titulo, cuerpo, usuario, fecha, rating }) => {
     );
 };
 
-const ReviewsSection = ({ userReviews, onAddReview }) => {
+const ReviewsSection = ({ userReviews, onAddReview, puedeResenar, yaReseno }) => {
     const [titulo, setTitulo] = useState("");
     const [cuerpo, setCuerpo] = useState("");
     const [rating, setRating] = useState(5);
@@ -199,6 +238,7 @@ const ReviewsSection = ({ userReviews, onAddReview }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!titulo.trim() || !cuerpo.trim()) return;
+        if (!puedeResenar || yaReseno) return;
 
         const nueva = {
             id: Date.now(),
@@ -228,48 +268,55 @@ const ReviewsSection = ({ userReviews, onAddReview }) => {
                 ))}
             </div>
 
-            <form className="infocurso-review-form" onSubmit={handleSubmit}>
-                <h3 className="infocurso-review-form-title">Escribe tu reseña</h3>
-                <div className="infocurso-review-form-row">
-                    <label>
-                        Título
-                        <input
-                            type="text"
-                            value={titulo}
-                            onChange={(e) => setTitulo(e.target.value)}
-                            className="infocurso-review-input"
-                        />
-                    </label>
-                </div>
-                <div className="infocurso-review-form-row">
-                    <label>
-                        Comentario
-                        <textarea
-                            value={cuerpo}
-                            onChange={(e) => setCuerpo(e.target.value)}
-                            className="infocurso-review-textarea"
-                            rows={4}
-                        />
-                    </label>
-                </div>
-                <div className="infocurso-review-form-row">
-                    <label>
-                        Calificación
-                        <select
-                            value={rating}
-                            onChange={(e) => setRating(e.target.value)}
-                            className="infocurso-review-select"
-                        >
-                            {[5, 4, 3, 2, 1].map((v) => (
-                                <option key={v} value={v}>{v} estrellas</option>
-                            ))}
-                        </select>
-                    </label>
-                </div>
-                <button type="submit" className="infocurso-review-submit">
-                    Publicar reseña
-                </button>
-            </form>
+            {puedeResenar && !yaReseno ? (
+                <form className="infocurso-review-form" onSubmit={handleSubmit}>
+                    <h3 className="infocurso-review-form-title">Escribe tu reseña</h3>
+                    <div className="infocurso-review-form-row">
+                        <label>
+                            Título
+                            <input
+                                type="text"
+                                value={titulo}
+                                onChange={(e) => setTitulo(e.target.value)}
+                                className="infocurso-review-input"
+                            />
+                        </label>
+                    </div>
+                    <div className="infocurso-review-form-row">
+                        <label>
+                            Comentario
+                            <textarea
+                                value={cuerpo}
+                                onChange={(e) => setCuerpo(e.target.value)}
+                                className="infocurso-review-textarea"
+                                rows={4}
+                            />
+                        </label>
+                    </div>
+                    <div className="infocurso-review-form-row">
+                        <label>
+                            Calificación
+                            <select
+                                value={rating}
+                                onChange={(e) => setRating(e.target.value)}
+                                className="infocurso-review-select"
+                            >
+                                {[5, 4, 3, 2, 1].map((v) => (
+                                    <option key={v} value={v}>{v} estrellas</option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+                    <button type="submit" className="infocurso-review-submit">
+                        Publicar reseña
+                    </button>
+                </form>
+            ) : (
+                <p className="infocurso-review-hint">
+                    Solo puedes dejar una reseña por curso y únicamente cuando tu
+                    reserva haya sido confirmada y la fecha de la clase ya haya pasado.
+                </p>
+            )}
         </section>
     );
 };
@@ -279,6 +326,8 @@ const InfoCurso = () => {
     const navigate = useNavigate();
     const [curso, setCurso] = useState(null);
     const [userReviews, setUserReviews] = useState([]);
+    const [puedeResenar, setPuedeResenar] = useState(false);
+    const [tieneReserva, setTieneReserva] = useState(false);
 
     useEffect(() => {
         const fetchCurso = async () => {
@@ -289,20 +338,27 @@ const InfoCurso = () => {
                 if (data?.success && data.curso) {
                     const c = data.curso;
 
+                    const categoriasNombres = Array.isArray(c.categorias)
+                        ? c.categorias
+                              .map((cat) => (typeof cat === "string" ? cat : cat.nombre))
+                              .filter(Boolean)
+                        : [];
+
                     const mapped = {
                         // Campos que ya usa el layout
                         id: c._id,
                         titulo: c.nombre || cursoMock.titulo,
                         tag:
                             (Array.isArray(c.tags) && c.tags[0]) ||
-                            (Array.isArray(c.categorias) && c.categorias[0]?.nombre) ||
+                            categoriasNombres[0] ||
                             cursoMock.tag,
                         precio:
                             typeof c.precio_reserva === "number"
                                 ? `${c.precio_reserva} Bs/hora`
                                 : cursoMock.precio,
                         resumen: c.descripcion || cursoMock.resumen,
-                        descripcionLarga: c.descripcion || cursoMock.descripcionLarga,
+                        categoriasNombres,
+                        modalidad: c.modalidad,
                         portada_url: c.portada_url || "",
                         tutor: {
                             nombre:
@@ -330,14 +386,24 @@ const InfoCurso = () => {
             const cursoId = curso?.id || id;
             if (!cursoId) return;
 
-            // 1) Crear reserva pendiente para este curso
+            // Si ya existe alguna reserva para este curso, solo abrimos/creamos chat
+            if (tieneReserva) {
+                const chatResp = await chatsAPI.createChat({ cursoId });
+                if (chatResp?.data?.success && chatResp.data.chat?._id) {
+                    navigate(`/chats/${chatResp.data.chat._id}`);
+                } else {
+                    window.alert("No se pudo abrir la conversación para este curso.");
+                }
+                return;
+            }
+
+            // Caso normal: crear reserva pendiente y luego chat
             const reservaResp = await reservasAPI.createReserva({ cursoId });
             if (!reservaResp?.data?.success) {
                 window.alert("No se pudo crear la reserva para este curso.");
                 return;
             }
 
-            // 2) Crear u obtener el chat asociado al curso y estudiante actual
             const chatResp = await chatsAPI.createChat({ cursoId });
             if (chatResp?.data?.success && chatResp.data.chat?._id) {
                 navigate(`/chats/${chatResp.data.chat._id}`);
@@ -366,7 +432,53 @@ const InfoCurso = () => {
         }
     }, [id]);
 
-    const handleAddReview = (review) => {
+    // Verificar si el usuario puede dejar reseña: debe tener una reserva
+    // confirmada o completada para este curso, y la fecha de la clase debe
+    // haber pasado.
+    useEffect(() => {
+        const checkReservaParaResena = async () => {
+            if (!id) return;
+            try {
+                const { data } = await reservasAPI.getMisReservasEstudiante();
+                if (data?.success && Array.isArray(data.reservas)) {
+                    const ahora = new Date();
+                    const tieneReservaCurso = data.reservas.some((r) => {
+                        if (!r.id_curso) return false;
+                        return String(r.id_curso._id) === String(id) && r.estado !== "cancelada";
+                    });
+
+                    const tieneReservaValida = data.reservas.some((r) => {
+                        if (!r.id_curso) return false;
+                        if (String(r.id_curso._id) !== String(id)) return false;
+
+                        if (r.estado !== "confirmada" && r.estado !== "completada") {
+                            return false;
+                        }
+
+                        const fechaClase = r.fecha
+                            ? new Date(r.fecha)
+                            : r.id_horario?.inicio
+                            ? new Date(r.id_horario.inicio)
+                            : null;
+
+                        return fechaClase && fechaClase <= ahora;
+                    });
+                    setTieneReserva(tieneReservaCurso);
+                    setPuedeResenar(tieneReservaValida);
+                } else {
+                    setPuedeResenar(false);
+                    setTieneReserva(false);
+                }
+            } catch {
+                setPuedeResenar(false);
+                setTieneReserva(false);
+            }
+        };
+
+        checkReservaParaResena();
+    }, [id]);
+
+    const handleAddReview = async (review) => {
         setUserReviews((prev) => {
             const updated = [review, ...prev];
             if (id) {
@@ -378,13 +490,32 @@ const InfoCurso = () => {
             }
             return updated;
         });
+
+        // Marcar la reserva como completada para este curso (si existe)
+        try {
+            const cursoId = curso?.id || id;
+            if (cursoId) {
+                await reservasAPI.marcarReservaCompletada({ cursoId });
+            }
+        } catch (error) {
+            console.error("Error marcando reserva como completada tras reseña:", error);
+        }
     };
 
     return (
         <div className="infocurso-page">
             <main className="infocurso-main">
-                <CourseInfoSection curso={curso} onReservar={handleReservar} />
-                <ReviewsSection userReviews={userReviews} onAddReview={handleAddReview} />
+                <CourseInfoSection
+                    curso={curso}
+                    onReservar={handleReservar}
+                    tieneReserva={tieneReserva}
+                />
+                <ReviewsSection
+                    userReviews={userReviews}
+                    onAddReview={handleAddReview}
+                    puedeResenar={puedeResenar}
+                    yaReseno={userReviews.length > 0}
+                />
             </main>
         </div>
     );

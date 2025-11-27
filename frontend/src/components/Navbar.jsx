@@ -110,15 +110,25 @@ const Navbar = ({ currentSection, adminMode = false }) => {
 
         <div className="navbar-actions">
           <nav className="navbar-links">
-            <Link to="/mis-cursos" className={linkClasses("courses")}>
-              Mis cursos
-            </Link>
-            <Link to="/chats" className={linkClasses("chats")}>
-              Chats
-            </Link>
-            <Link to="/explorar" className={linkClasses("explore")}>
-              Explorar
-            </Link>
+            {!isTutor && (
+              <>
+                <Link to="/mis-cursos" className={linkClasses("courses")}>
+                  Mis cursos
+                </Link>
+                <Link to="/chats" className={linkClasses("chats")}>
+                  Chats
+                </Link>
+                <Link to="/explorar" className={linkClasses("explore")}>
+                  Explorar
+                </Link>
+              </>
+            )}
+
+            {isTutor && (
+              <Link to="/chats" className={linkClasses("chats")}>
+                Chats
+              </Link>
+            )}
 
             {isTutor && !isOnTutorPanel && (
               <button
@@ -178,27 +188,41 @@ const Navbar = ({ currentSection, adminMode = false }) => {
 
       {open && (
         <nav className="navbar-mobile-menu md:hidden">
-          <Link
-            to="/mis-cursos"
-            className={linkClasses("courses") + " w-fit"}
-            onClick={() => setOpen(false)}
-          >
-            Mis cursos
-          </Link>
-          <Link
-            to="/chats"
-            className={linkClasses("chats") + " w-fit"}
-            onClick={() => setOpen(false)}
-          >
-            Chats
-          </Link>
-          <Link
-            to="/explorar"
-            className={linkClasses("explore") + " w-fit"}
-            onClick={() => setOpen(false)}
-          >
-            Explorar
-          </Link>
+          {!isTutor && (
+            <>
+              <Link
+                to="/mis-cursos"
+                className={linkClasses("courses") + " w-fit"}
+                onClick={() => setOpen(false)}
+              >
+                Mis cursos
+              </Link>
+              <Link
+                to="/chats"
+                className={linkClasses("chats") + " w-fit"}
+                onClick={() => setOpen(false)}
+              >
+                Chats
+              </Link>
+              <Link
+                to="/explorar"
+                className={linkClasses("explore") + " w-fit"}
+                onClick={() => setOpen(false)}
+              >
+                Explorar
+              </Link>
+            </>
+          )}
+
+          {isTutor && (
+            <Link
+              to="/chats"
+              className={linkClasses("chats") + " w-fit"}
+              onClick={() => setOpen(false)}
+            >
+              Chats
+            </Link>
+          )}
 
           {isTutor && !isOnTutorPanel && (
             <button

@@ -51,7 +51,11 @@
 }
 
 .chat-course {
-  @apply text-[11px] text-slate-400;
+  @apply mt-0.5 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-[11px] text-slate-600 border border-slate-200;
+}
+
+.chat-accept-btn:disabled {
+  @apply bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300;
 }
 
 .chat-messages {
@@ -98,8 +102,26 @@
   @apply text-base md:text-lg font-semibold text-slate-900 truncate;
 }
 
+.chat-messages-subtitle {
+  @apply mt-0.5 text-[11px] md:text-xs text-slate-500;
+}
+
+.chat-reserva-actions {
+  @apply flex items-center gap-2;
+}
+
 .chat-accept-btn {
-  @apply text-xs md:text-sm px-3 py-1.5 rounded-full bg-emerald-600 text-white font-medium hover:bg-emerald-700 whitespace-nowrap;
+  @apply text-xs md:text-sm px-3.5 py-1.5 rounded-full bg-emerald-500 text-white font-medium
+         hover:bg-emerald-600 whitespace-nowrap shadow-sm;
+}
+
+.chat-reject-btn {
+  @apply text-xs md:text-sm px-3.5 py-1.5 rounded-full bg-slate-800 text-slate-50 font-medium
+         hover:bg-slate-900 whitespace-nowrap shadow-sm border border-slate-900;
+}
+
+.chat-reject-btn:disabled {
+  @apply bg-slate-200 text-slate-400 border-slate-200 cursor-not-allowed hover:bg-slate-200;
 }
 
 .chat-modal-backdrop {

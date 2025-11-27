@@ -2,6 +2,14 @@ import "../../styles/Explorar/cursoCard.css";
 import { Link } from "react-router-dom";
 import api from "../../api/config";
 
+// Colores suaves de chips, alineados con InfoCurso (infocurso-chip-color-1..4)
+const categoryColorClasses = [
+  "curso-chip-color-1",
+  "curso-chip-color-2",
+  "curso-chip-color-3",
+  "curso-chip-color-4",
+];
+
 const tagColors = {
   Programación: "tag-blue",
   Productividad: "tag-green",
@@ -25,7 +33,7 @@ const resolvePortadaUrl = (portada) => {
   return portada;
 };
 
-const CursoCard = ({ id, titulo, tag, descripcion, nivel, duracion, portada }) => {
+const CursoCard = ({ id, titulo, tag, descripcion, nivel, duracion, portada, categorias = [] }) => {
   const tagClass = tagColors[tag] || "tag-default";
   const portadaSrc = resolvePortadaUrl(portada);
 
@@ -48,11 +56,31 @@ const CursoCard = ({ id, titulo, tag, descripcion, nivel, duracion, portada }) =
               <h3 className="curso-title">{titulo}</h3>
             </div>
 
-            {tag && (
-              <span className={`curso-tag ${tagClass}`}>
-                {tag}
-              </span>
-            )}
+            <div className="curso-tags-row">
+              {Array.isArray(categorias) &&
+                categorias.map((cat, index) => {
+                  const nombre = typeof cat === "string" ? cat : cat.nombre;
+                  if (!nombre) return null;
+                  const categoriaClass =
+                    categoryColorClasses[
+                      index % categoryColorClasses.length
+                    ];
+                  return (
+                    <span
+                      key={nombre}
+                      className={`curso-tag ${categoriaClass}`}
+                    >
+                      {nombre}
+                    </span>
+                  );
+                })}
+
+              {tag && (
+                <span className={`curso-tag ${tagClass}`}>
+                  {tag}
+                </span>
+              )}
+            </div>
 
             <p className="curso-description">{descripcion}</p>
           </div>

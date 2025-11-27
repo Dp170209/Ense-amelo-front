@@ -14,6 +14,7 @@ const ChatPage = () => {
   const [nuevoMensaje, setNuevoMensaje] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [mostrarModalReserva, setMostrarModalReserva] = useState(false);
+  const [reservasPorChat, setReservasPorChat] = useState({});
 
   const usuarioActual = JSON.parse(localStorage.getItem("user") || "{}");
   const usuarioActualId = usuarioActual._id || usuarioActual.id;
@@ -25,7 +26,42 @@ const ChatPage = () => {
       try {
         const { data } = await chatsAPI.getChats();
         if (data?.success) {
-          setChats(data.chats || []);
+          const chatsObtenidos = data.chats || [];
+          setChats(chatsObtenidos);
+
+          // Cargar estado de reservas por chat
+          const reservasMap = {};
+          await Promise.all(
+            chatsObtenidos.map(async (chat) => {
+              if (!chat.id_curso?._id) return;
+
+              let estudianteId = null;
+              if (usuarioActualRolCodigo === 1 || usuarioActualRol === "estudiante") {
+                estudianteId = usuarioActualId;
+              } else {
+                const otros = (chat.participantes || []).filter(
+                  (p) => String(p._id) !== String(usuarioActualId)
+                );
+                if (otros[0]) estudianteId = otros[0]._id;
+              }
+
+              if (!estudianteId) return;
+
+              try {
+                const { data: dataReserva } = await reservasAPI.getEstadoReservaChat({
+                  cursoId: chat.id_curso._id,
+                  estudianteId,
+                });
+                if (dataReserva?.success && dataReserva.reserva) {
+                  reservasMap[chat._id] = dataReserva.reserva;
+                }
+              } catch (error) {
+                console.error("Error obteniendo estado de reserva para chat:", error);
+              }
+            })
+          );
+
+          setReservasPorChat(reservasMap);
         }
       } catch (error) {
         console.error("Error obteniendo chats:", error);
@@ -96,6 +132,35 @@ const ChatPage = () => {
 
   const chatSeleccionado = chats.find((c) => c._id === selectedChatId) || null;
   const tituloCurso = chatSeleccionado?.id_curso?.nombre || "";
+  const reservaSeleccionada = chatSeleccionado
+    ? reservasPorChat[chatSeleccionado._id] || null
+    : null;
+
+  const obtenerLabelsTutorEstudiante = () => {
+    if (!chatSeleccionado) return { tutorLabel: "", estudianteLabel: "" };
+
+    const participantes = chatSeleccionado.participantes || [];
+    const otro = participantes.find(
+      (p) => String(p._id) !== String(usuarioActualId)
+    );
+    const nombreOtro = otro
+      ? `${otro.nombre || ""} ${otro.apellido || ""}`.trim() || "Usuario"
+      : "Usuario";
+
+    if (usuarioActualRolCodigo === 2 || usuarioActualRol === "docente") {
+      return {
+        tutorLabel: "Tú (tutor)",
+        estudianteLabel: nombreOtro || "Estudiante",
+      };
+    }
+
+    return {
+      tutorLabel: nombreOtro || "Tutor",
+      estudianteLabel: "Tú (estudiante)",
+    };
+  };
+
+  const { tutorLabel, estudianteLabel } = obtenerLabelsTutorEstudiante();
 
   // Asumimos tutor si rolCodigo === 2 o rol === 'docente'
   const esTutorEnChatSeleccionado = !!(
@@ -142,12 +207,47 @@ const ChatPage = () => {
       if (data?.success) {
         window.alert("Reserva aceptada y horario creado correctamente.");
         setMostrarModalReserva(false);
+        if (data.reserva && chatSeleccionado) {
+          setReservasPorChat((prev) => ({
+            ...prev,
+            [chatSeleccionado._id]: data.reserva,
+          }));
+        }
       } else {
         window.alert("No se pudo aceptar la reserva. Intenta nuevamente.");
       }
     } catch (error) {
       console.error("Error aceptando reserva:", error);
       window.alert("Ocurrió un error al aceptar la reserva.");
+    }
+  };
+
+  const manejarRechazarReserva = async () => {
+    if (!chatSeleccionado) return;
+
+    const cursoId = chatSeleccionado.id_curso?._id;
+    const estudianteId = obtenerEstudianteIdDeChat();
+
+    if (!cursoId || !estudianteId) return;
+
+    try {
+      const { data } = await reservasAPI.rechazarReserva({
+        cursoId,
+        estudianteId,
+      });
+
+      if (data?.success && data.reserva) {
+        window.alert("Reserva rechazada correctamente.");
+        setReservasPorChat((prev) => ({
+          ...prev,
+          [chatSeleccionado._id]: data.reserva,
+        }));
+      } else {
+        window.alert("No se pudo rechazar la reserva. Intenta nuevamente.");
+      }
+    } catch (error) {
+      console.error("Error rechazando reserva:", error);
+      window.alert("Ocurrió un error al rechazar la reserva.");
     }
   };
 
@@ -203,9 +303,11 @@ const ChatPage = () => {
                     <div className="chat-last-message">
                       {chat.ultimoMensaje || nombreOtro}
                     </div>
-                    {chat.id_curso?.nombre && (
-                      <div className="chat-course">Curso</div>
-                    )}
+                    <div className="chat-course">
+                      {reservasPorChat[chat._id]?.estado
+                        ? `Reserva: ${reservasPorChat[chat._id].estado}`
+                        : "Sin reserva"}
+                    </div>
                   </div>
                 </div>
               );
@@ -221,14 +323,28 @@ const ChatPage = () => {
                 <h2 className="chat-messages-title">
                   {tituloCurso || "Chat del curso"}
                 </h2>
+                {(tutorLabel || estudianteLabel) && (
+                  <p className="chat-messages-subtitle">
+                    Tutor: {tutorLabel} · Estudiante: {estudianteLabel}
+                  </p>
+                )}
                 {esTutorEnChatSeleccionado && (
-                  <button
-                    type="button"
-                    className="chat-accept-btn"
-                    onClick={manejarAbrirModalReserva}
-                  >
-                    Aceptar reserva
-                  </button>
+                  <div className="chat-reserva-actions">
+                    <button
+                      type="button"
+                      className="chat-accept-btn"
+                      onClick={manejarAbrirModalReserva}
+                      disabled={
+                        reservaSeleccionada &&
+                        ((
+                          reservaSeleccionada.estado &&
+                            reservaSeleccionada.estado !== "pendiente"
+                        ) || reservaSeleccionada.id_horario)
+                      }
+                    >
+                      Aceptar reserva
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

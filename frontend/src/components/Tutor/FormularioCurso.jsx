@@ -36,8 +36,11 @@ const FormularioCurso = ({ open, onClose, onSuccess, cursoId }) => {
       setLoading(true);
       const { data } = await verificarAPI.crearSolicitud(formData);
       if (data?.success) {
-        if (onSuccess) onSuccess(data.solicitud);
-        onClose();
+        if (onSuccess) {
+          onSuccess(data.solicitud);
+        } else if (onClose) {
+          onClose();
+        }
       } else {
         setError("No se pudo enviar la solicitud. Intenta nuevamente.");
       }

@@ -13,4 +13,24 @@ export const reservasAPI = {
 
   getReservasConfirmadasTutor: () =>
     api.get("/reservas/tutor/confirmadas"),
+
+  getEstadoReservaChat: ({ cursoId, estudianteId }) =>
+    api.get("/reservas/estado-chat", {
+      params: {
+        id_curso: cursoId,
+        id_estudiante: estudianteId,
+      },
+    }),
+
+  getMisReservasEstudiante: () =>
+    api.get("/reservas/mis"),
+
+  marcarReservaCompletada: ({ cursoId }) =>
+    api.post("/reservas/completar", { id_curso: cursoId }),
+
+  rechazarReserva: ({ cursoId, estudianteId }) =>
+    api.post("/reservas/rechazar", {
+      id_curso: cursoId,
+      id_estudiante: estudianteId,
+    }),
 };

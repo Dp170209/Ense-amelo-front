@@ -5,33 +5,6 @@ import { reservasAPI } from "../api/reservas";
 import CardTutor from "./Tutor/CardTutor";
 import "../styles/panelTutor.css";
 
-const mockClases = [
-  {
-    id: 1,
-    titulo: "Clase 1",
-    categoria: "Matemáticas",
-    precio: "Bs 50",
-    modalidad: "presencial",
-    descripcion: "Clases de matemáticas para estudiantes de primaria",
-  },
-  {
-    id: 2,
-    titulo: "Clase 2",
-    categoria: "Programación",
-    precio: "Bs 100",
-    modalidad: "presencial",
-    descripcion: "Aprende a programar en python desde cero",
-  },
-  {
-    id: 3,
-    titulo: "Clase 3",
-    categoria: "Inglés",
-    precio: "Bs 150",
-    modalidad: "virtual",
-    descripcion: "Clases virtuales de inglés nivel B2",
-  },
-];
-
 const calendarDays = Array.from({ length: 31 }, (_, i) => i + 1);
 
 const PanelTutor = () => {
@@ -40,6 +13,10 @@ const PanelTutor = () => {
   const [loadingCursos, setLoadingCursos] = useState(false);
   const [errorCursos, setErrorCursos] = useState("");
   const [reservasConfirmadas, setReservasConfirmadas] = useState([]);
+  const [currentMonthDate, setCurrentMonthDate] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
 
   useEffect(() => {
     const fetchCursos = async () => {
@@ -113,14 +90,52 @@ const PanelTutor = () => {
     }
   };
 
+  const viewChats = () => {
+    navigate("/chats");
+  };
+
+  const currentMonthIndex = currentMonthDate.getMonth();
+  const currentYear = currentMonthDate.getFullYear();
+
   const reservasPorDia = reservasConfirmadas.reduce((acc, reserva) => {
     if (!reserva.fecha) return acc;
     const fecha = new Date(reserva.fecha);
+
+    if (
+      fecha.getMonth() !== currentMonthIndex ||
+      fecha.getFullYear() !== currentYear
+    ) {
+      return acc;
+    }
+
     const dia = fecha.getDate();
     if (!acc[dia]) acc[dia] = [];
     acc[dia].push(reserva);
     return acc;
   }, {});
+
+  const monthLabel = currentMonthDate.toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+
+  const todayLabel = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
+  const changeMonth = (delta) => {
+    setCurrentMonthDate((prev) =>
+      new Date(prev.getFullYear(), prev.getMonth() + delta, 1)
+    );
+  };
+
+  const ahora = new Date();
+  const proximasClases = reservasConfirmadas
+    .filter((r) => r.fecha && new Date(r.fecha) >= ahora)
+    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+    .slice(0, 5);
 
   const viewCursos = () => {
     const section = document.getElementById("tutor-cursos-section");
@@ -145,7 +160,7 @@ const PanelTutor = () => {
     <div className="panel-tutor-page">
       <div className="main-content">
         <div className="container">
-          <h1 className="panel-tutor-title">Panel Tutor</h1>
+          <h1 className="panel-tutor-title">Panel del tutor</h1>
           <div className="content-layout">
             <div className="left-content">
               <div className="tutor-banner">
@@ -160,7 +175,7 @@ const PanelTutor = () => {
                         </svg>
                         Crear Nuevo Curso
                       </button>
-                      <button className="action-btn" type="button" onClick={viewCalendar}>
+                      <button className="action-btn" type="button" onClick={viewChats}>
                         <svg viewBox="0 0 24 24" fill="currentColor">
                           <path d="M19 3H18V1H16V3H8V1H6V3H5C3.89 3 3 3.9 3 5V19C3 20.1 3.89 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H12V15H7V10Z" />
                         </svg>
@@ -183,54 +198,55 @@ const PanelTutor = () => {
               </div>
 
               <div className="clases-section">
-                {mockClases.map((clase) => (
-                  <div className="clase-item" key={clase.id}>
-                    <div className="clase-icon">
-                      <div className="icon-placeholder">△</div>
-                      <div className="icon-placeholder">⚙</div>
-                      <div className="icon-placeholder">□</div>
-                    </div>
-                    <div className="clase-info">
-                      <h3>{clase.titulo}</h3>
-                      <p className="clase-details">
-                        {clase.categoria} - {clase.precio} - {clase.modalidad}
-                      </p>
-                      <p className="clase-description">{clase.descripcion}</p>
-                    </div>
-                    <div className="clase-actions">
-                      <button
-                        className="action-btn-small"
-                        type="button"
-                        onClick={() => verDetalle(clase)}
-                      >
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12 4.5C7 4.5 2.73 7.61 1 12C2.73 16.39 7 19.5 12 19.5C17 19.5 21.27 16.39 23 12C21.27 7.61 17 4.5 12 4.5ZM12 17C9.24 17 7 14.76 7 12C7 9.24 9.24 7 12 7C14.76 7 17 9.24 17 12C17 14.76 14.76 17 12 17ZM12 9C10.34 9 9 10.34 9 12C9 13.66 10.34 15 12 15C13.66 15 15 13.66 15 12C15 10.34 13.66 9 12 9Z" />
-                        </svg>
-                        Detalle
-                      </button>
-                      <button
-                        className="action-btn-small reject"
-                        type="button"
-                        onClick={() => rechazar(clase)}
-                      >
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M12,4C13.1,4 14,4.9 14,6C14,7.1 13.1,8 12,8C10.9,8 10,7.1 10,6C10,4.9 10.9,4 12,4M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M12,6A4,4 0 0,0 8,10V11H16V10A4,4 0 0,0 12,6Z" />
-                        </svg>
-                        Rechazar
-                      </button>
-                      <button
-                        className="action-btn-small accept"
-                        type="button"
-                        onClick={() => aceptar(clase)}
-                      >
-                        <svg viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M9,20.42L2.79,14.21L5.62,11.38L9,14.77L18.88,4.88L21.71,7.71L9,20.42Z" />
-                        </svg>
-                        Aceptar
-                      </button>
-                    </div>
+                <h3 className="clases-title">Próximas clases confirmadas</h3>
+                {proximasClases.length === 0 && (
+                  <p className="clases-empty">
+                    Aún no tienes clases confirmadas próximas en el calendario.
+                  </p>
+                )}
+                {proximasClases.length > 0 && (
+                  <div className="clases-list">
+                    {proximasClases.map((reserva) => {
+                      const fecha = reserva.fecha ? new Date(reserva.fecha) : null;
+                      const fechaTexto = fecha
+                        ? fecha.toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "";
+                      const horaTexto = fecha
+                        ? fecha.toLocaleTimeString(undefined, {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
+                        : "";
+
+                      const est = reserva.id_usuario || {};
+                      const nombreEstudiante =
+                        est.nombreCompleto ||
+                        (est.nombre && est.apellido
+                          ? `${est.nombre} ${est.apellido}`
+                          : est.nombre || est.email || "Estudiante");
+
+                      return (
+                        <div className="clase-item" key={reserva._id}>
+                          <div className="clase-info">
+                            <h3>{reserva.id_curso?.nombre || "Curso"}</h3>
+                            <p className="clase-details">
+                              {fechaTexto && horaTexto
+                                ? `${fechaTexto} · ${horaTexto}`
+                                : "Sin fecha definida"}
+                            </p>
+                            <p className="clase-description">
+                              Estudiante: {nombreEstudiante}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
               </div>
 
               <div
@@ -264,14 +280,26 @@ const PanelTutor = () => {
             <div className="right-content" id="tutor-calendar-section">
               <div className="calendar-widget">
                 <h3>Seleccionar una fecha</h3>
-                <div className="current-date">Lunes, 21 de Octubre</div>
+                <div className="current-date">{todayLabel}</div>
 
                 <div className="month-selector">
-                  <button className="nav-btn" type="button">‹</button>
-                  <select className="month-dropdown">
-                    <option>Octubre 2025</option>
+                  <button
+                    className="nav-btn"
+                    type="button"
+                    onClick={() => changeMonth(-1)}
+                  >
+                    ‹
+                  </button>
+                  <select className="month-dropdown" value={monthLabel} readOnly>
+                    <option>{monthLabel}</option>
                   </select>
-                  <button className="nav-btn" type="button">›</button>
+                  <button
+                    className="nav-btn"
+                    type="button"
+                    onClick={() => changeMonth(1)}
+                  >
+                    ›
+                  </button>
                 </div>
 
                 <div className="calendar-grid">
@@ -291,10 +319,15 @@ const PanelTutor = () => {
                       const tooltip = tieneReserva
                         ? reservasDia
                             .map(
-                              (r) =>
-                                `${r.id_curso?.nombre || "Curso"} - Estudiante: ${
-                                  r.id_usuario?._id || ""
-                                }`
+                              (r) => {
+                                const est = r.id_usuario || {};
+                                const nombreEstudiante =
+                                  est.nombreCompleto ||
+                                  (est.nombre && est.apellido
+                                    ? `${est.nombre} ${est.apellido}`
+                                    : est.nombre || est.email || "Estudiante");
+                                return `${r.id_curso?.nombre || "Curso"} - Estudiante: ${nombreEstudiante}`;
+                              }
                             )
                             .join("\n")
                         : "";

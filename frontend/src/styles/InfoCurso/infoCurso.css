@@ -75,12 +75,36 @@
 }
 
 .infocurso-title {
-  @apply text-xl md:text-2xl font-semibold text-slate-900;
+  @apply text-2xl md:text-3xl font-bold text-slate-900 tracking-tight;
 }
 
-.infocurso-tag {
-  @apply inline-block text-[11px] font-medium px-3 py-[3px]
-         rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300;
+.infocurso-chips-row {
+  @apply mt-1 flex flex-wrap gap-1.5;
+}
+
+.infocurso-chip {
+  @apply inline-flex items-center px-3 py-[3px] rounded-full text-[11px]
+         font-medium border;
+}
+
+.infocurso-chip-color-1 {
+  @apply bg-sky-100 text-sky-700 border-sky-300;
+}
+
+.infocurso-chip-color-2 {
+  @apply bg-emerald-100 text-emerald-700 border-emerald-300;
+}
+
+.infocurso-chip-color-3 {
+  @apply bg-violet-100 text-violet-700 border-violet-300;
+}
+
+.infocurso-chip-color-4 {
+  @apply bg-amber-100 text-amber-700 border-amber-300;
+}
+
+.infocurso-chip-modalidad {
+  @apply bg-slate-900 text-slate-50 border-slate-900;
 }
 
 .infocurso-price-row {
@@ -92,7 +116,7 @@
 }
 
 .infocurso-price {
-  @apply text-2xl md:text-3xl font-bold text-slate-900;
+  @apply text-xl md:text-2xl font-semibold text-slate-900;
 }
 
 .infocurso-summary {
@@ -158,4 +182,14 @@
   @apply self-end mt-auto inline-flex items-center justify-center rounded-lg bg-slate-900
          px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800
          focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-1;
+}
+
+.infocurso-review-hint {
+  @apply mt-4 rounded-xl border border-dashed border-sky-300 bg-sky-50/80
+         px-4 py-3 text-[13px] text-slate-700 flex items-start gap-2;
+}
+
+.infocurso-review-hint::before {
+  content: "★";
+  @apply text-amber-500 mt-[1px] text-sm;
 }

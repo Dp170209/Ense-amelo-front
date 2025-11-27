@@ -172,7 +172,15 @@ router.get('/', authenticateToken, requireAdmin, async (req, res) => {
     const solicitudes = await Verificar.find(filter)
       .populate('id_usuario', 'nombre apellido email telefono')
       .populate('id_perfil_tutor')
-      .populate('id_curso', 'nombre descripcion modalidad necesita_reserva precio_reserva creado actualizado');
+      .populate({
+        path: 'id_curso',
+        select:
+          'nombre descripcion modalidad necesita_reserva precio_reserva creado actualizado categorias portada_url galeria_urls',
+        populate: {
+          path: 'categorias',
+          select: 'nombre',
+        },
+      });
 
     res.json({
       success: true,

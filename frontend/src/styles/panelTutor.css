@@ -116,27 +116,34 @@
 }
 
 .tutor-banner {
-  background: linear-gradient(135deg, #ecf0f1 0%, #d5dbdb 100%);
+  background-image: url("/img/admin-banner.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   padding: 40px;
-  border-radius: 12px;
+  border-radius: 16px;
   margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
 }
 
 .banner-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 10;
 }
 
 .banner-info h2 {
   font-size: 32px;
   font-weight: bold;
-  color: #2c3e50;
+  color: #0f172a;
   margin: 0 0 10px 0;
 }
 
 .banner-info p {
-  color: #7f8c8d;
+  color: #e5e7eb;
   margin: 0 0 20px 0;
 }
 
@@ -188,7 +195,7 @@
 .clases-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .clase-item {
@@ -199,6 +206,7 @@
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 8px;
 }
 
 .clase-icon {
@@ -381,43 +389,12 @@
 }
 
 .calendar-day-reservado {
-  background-color: #34d399;
-  color: #ffffff;
+  background-color: #a5b4fc;
+  color: #1e293b;
 }
 
 .calendar-day-reservado:hover {
-  background-color: #10b981;
-}
-
-.calendar-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.calendar-btn {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  background-color: white;
-  color: #2c3e50;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.3s;
-}
-
-.calendar-btn:hover {
-  background-color: #ecf0f1;
-}
-
-.calendar-btn.primary {
-  background-color: #36759e;
-  color: white;
-  border-color: #36759e;
-}
-
-.calendar-btn.primary:hover {
-  background-color: #2c5aa0;
+  background-color: #818cf8;
 }
 
 @media (max-width: 768px) {

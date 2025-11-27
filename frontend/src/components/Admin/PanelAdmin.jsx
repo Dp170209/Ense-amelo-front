@@ -21,6 +21,9 @@ const mapSolicitudFromApi = (raw) => {
     foto_ci: raw.foto_ci
       ? `/static/verificaciones/${raw.foto_ci}`
       : "",
+    archivos_verificacion: Array.isArray(raw.archivos)
+      ? raw.archivos.map((f) => `/static/verificaciones/${f}`)
+      : [],
     creado: raw.creado,
     decidido: raw.decidido,
     actualizado: raw.decidido || raw.creado,
@@ -42,6 +45,11 @@ const mapSolicitudFromApi = (raw) => {
           ? curso.necesita_reserva
           : false,
       precio_reserva: curso.precio_reserva ?? 0,
+      categoriasNombres: Array.isArray(curso.categorias)
+        ? curso.categorias
+            .map((c) => (typeof c === "string" ? c : c.nombre))
+            .filter(Boolean)
+        : [],
       attribute_10: 0,
     },
     perfil_tutor: {
@@ -124,12 +132,26 @@ const PanelAdmin = () => {
   return (
     <div className="admin-panel-page">
       <div className="admin-panel-container">
-        <header className="admin-panel-header-simple">
-          <h1 className="admin-panel-title">Solicitudes de Tutores</h1>
-          <p className="admin-panel-subtitle">
-            Revisa y decide sobre las solicitudes de verificación.
-          </p>
-        </header>
+        <section className="admin-panel-hero">
+          <div className="admin-panel-hero-overlay" />
+          <div className="admin-panel-hero-content">
+            <div>
+              <h1 className="admin-panel-title">Panel de administración</h1>
+              <p className="admin-panel-subtitle">
+                Administra y revisa las solicitudes de verificación de tutores y sus cursos.
+              </p>
+            </div>
+            <div className="admin-panel-hero-buttons">
+              <span className="admin-panel-chip admin-panel-chip-primary">
+                Solicitudes de tutores
+              </span>
+              <span className="admin-panel-chip admin-panel-chip-light">
+                Revisa, acepta o rechaza cursos propuestos
+              </span>
+            </div>
+          </div>
+          <div className="admin-panel-hero-graphic" />
+        </section>
 
         {/* Filtros por estado (solo si NO hay detalle abierto) */}
         {!selectedSolicitud && (

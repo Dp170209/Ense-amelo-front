@@ -11,6 +11,7 @@ const ConfigurarCurso = () => {
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [previewPortada, setPreviewPortada] = useState("");
+  const [previewGaleria, setPreviewGaleria] = useState([]);
 
   const [form, setForm] = useState({
     nombre: "",
@@ -20,6 +21,7 @@ const ConfigurarCurso = () => {
     necesita_reserva: true,
     tags: [], // usaremos este arreglo para guardar los IDs de categorías seleccionadas
     portada_url: "",
+    galeria_urls: [],
   });
 
   const [categorias, setCategorias] = useState([]);
@@ -73,26 +75,53 @@ const ConfigurarCurso = () => {
   };
 
   const handlePickPortada = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const result = ev.target?.result;
-      if (typeof result === "string") {
-        setPreviewPortada(result);
-      }
-    };
-    reader.readAsDataURL(file);
+    const maxFiles = 4;
+    const limitedFiles = files.slice(0, maxFiles);
 
     try {
-      const { data } = await uploadsAPI.uploadImage(file);
-      if (data?.success && data.url) {
-        setForm((prev) => ({ ...prev, portada_url: data.url }));
+      const nuevasUrls = [];
+      const nuevasPrevias = [];
+
+      for (let i = 0; i < limitedFiles.length; i += 1) {
+        const file = limitedFiles[i];
+
+        // preview rápida
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const result = ev.target?.result;
+          if (typeof result === "string") {
+            nuevasPrevias.push(result);
+            if (i === 0) {
+              setPreviewPortada(result);
+            }
+            setPreviewGaleria((prev) => [...prev, result]);
+          }
+        };
+        reader.readAsDataURL(file);
+
+        // subida al backend
+        const { data } = await uploadsAPI.uploadImage(file);
+        if (data?.success && data.url) {
+          nuevasUrls.push(data.url);
+        }
+      }
+
+      if (nuevasUrls.length > 0) {
+        setForm((prev) => ({
+          ...prev,
+          portada_url: prev.portada_url || nuevasUrls[0],
+          galeria_urls: [...(prev.galeria_urls || []), ...nuevasUrls].slice(
+            0,
+            maxFiles
+          ),
+        }));
       }
     } catch (error) {
-      console.error("Error subiendo portada de curso:", error);
-      window.alert("No se pudo subir la imagen. Usa JPG/PNG/WebP y < 5MB.");
+      console.error("Error subiendo imágenes del curso:", error);
+      window.alert("No se pudieron subir las imágenes. Usa JPG/PNG/WebP y < 5MB.");
     }
   };
 
@@ -128,6 +157,7 @@ const ConfigurarCurso = () => {
         categorias: form.tags, // IDs de categorías seleccionadas
         tags: selectedCategorias.map((cat) => cat.nombre),
         portada_url: form.portada_url || "",
+        galeria_urls: Array.isArray(form.galeria_urls) ? form.galeria_urls : [],
       };
 
       const { data } = await cursosAPI.createCurso(payload);
@@ -177,6 +207,7 @@ const ConfigurarCurso = () => {
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
+                      multiple
                       style={{ display: "none" }}
                       onChange={handlePickPortada}
                     />
@@ -309,7 +340,14 @@ const ConfigurarCurso = () => {
 
       <FormularioCurso
         open={openVerificacion}
-        onClose={() => setOpenVerificacion(false)}
+        onClose={() => {
+          setOpenVerificacion(false);
+          navigate("/panel-tutor");
+        }}
+        onSuccess={() => {
+          setOpenVerificacion(false);
+          navigate("/panel-tutor");
+        }}
         cursoId={cursoCreadoId}
       />
     </div>
