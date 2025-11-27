@@ -72,7 +72,17 @@ const resolvePortadaUrl = (portada) => {
     return portada;
 };
 
-const CourseInfoSection = ({ curso, onReservar, tieneReserva }) => {
+const CourseInfoSection = ({ 
+    curso, 
+    onReservar, 
+    tieneReserva, 
+    disponibilidad = {
+        tiene_cupo_limitado: false,
+        cupos_disponibles: null,
+        tiene_disponibilidad: true,
+        usuario_tiene_reserva: false
+    }
+}) => {
     const data = curso || cursoMock;
     const {
         titulo,
@@ -185,16 +195,34 @@ const CourseInfoSection = ({ curso, onReservar, tieneReserva }) => {
                     <p className="infocurso-price">{precio}</p>
                 </div>
 
+                {disponibilidad.tiene_cupo_limitado && (
+                    <div className="infocurso-cupos-info">
+                        {disponibilidad.tiene_disponibilidad ? (
+                            <p className="infocurso-cupos-disponibles">
+                                Cupos disponibles: {disponibilidad.cupos_disponibles}
+                            </p>
+                        ) : (
+                            <p className="infocurso-cupos-agotados">
+                                ⚠️ Curso lleno - No hay cupos disponibles
+                            </p>
+                        )}
+                    </div>
+                )}
+
                 <p className="infocurso-summary">{resumen}</p>
 
                 <button
                     type="button"
                     className="infocurso-reserve-btn"
                     onClick={onReservar}
+                    disabled={!disponibilidad.tiene_disponibilidad && !tieneReserva}
                 >
-                    {tieneReserva ? "Ver conversación" : "Reservar"}
+                    {tieneReserva 
+                        ? "Ver conversación" 
+                        : disponibilidad.tiene_disponibilidad 
+                            ? "Reservar" 
+                            : "Curso lleno"}
                 </button>
-
                 {/* La descripción detallada ya se muestra en el resumen para evitar duplicados */}
             </div>
         </section>
@@ -329,6 +357,13 @@ const InfoCurso = () => {
     const [puedeResenar, setPuedeResenar] = useState(false);
     const [tieneReserva, setTieneReserva] = useState(false);
 
+    const [disponibilidad, setDisponibilidad] = useState({
+        tiene_cupo_limitado: false,
+        cupos_disponibles: null,
+        tiene_disponibilidad: true,
+        usuario_tiene_reserva: false
+    });
+
     useEffect(() => {
         const fetchCurso = async () => {
             if (!id) return;
@@ -380,11 +415,55 @@ const InfoCurso = () => {
 
         fetchCurso();
     }, [id]);
+    useEffect(() => {
+    const fetchDisponibilidad = async () => {
+        if (!id) return;
+        
+        try {
+        const usuarioActual = JSON.parse(localStorage.getItem("user") || "{}");
+        const usuarioId = usuarioActual._id || usuarioActual.id;
+        
+        const { data } = await api.get(`/reservas/disponibilidad/${id}`, {
+            params: { id_usuario: usuarioId }
+        });
+        
+        if (data?.success) {
+            setDisponibilidad({
+            tiene_cupo_limitado: data.tiene_cupo_limitado,
+            cupos_disponibles: data.cupos_disponibles,
+            tiene_disponibilidad: data.tiene_disponibilidad,
+            usuario_tiene_reserva: data.usuario_tiene_reserva
+            });
+            setTieneReserva(data.usuario_tiene_reserva);
+        }
+        } catch (error) {
+        console.error("Error verificando disponibilidad:", error);
+        }
+    };
+    
+    fetchDisponibilidad();
+    }, [id]);
+
 
     const handleReservar = async () => {
         try {
             const cursoId = curso?.id || id;
             if (!cursoId) return;
+
+            // ⭐ Verificar disponibilidad antes de reservar
+            if (!disponibilidad.tiene_disponibilidad && !tieneReserva) {
+                window.alert("Lo sentimos, este curso no tiene cupos disponibles.");
+                return;
+            }
+
+            if (disponibilidad.usuario_tiene_reserva) {
+                window.alert("Ya tienes una reserva activa para este curso.");
+                const chatResp = await chatsAPI.createChat({ cursoId });
+                if (chatResp?.data?.success && chatResp.data.chat?._id) {
+                    navigate(`/chats/${chatResp.data.chat._id}`);
+                }
+                return;
+            }
 
             // Si ya existe alguna reserva para este curso, solo abrimos/creamos chat
             if (tieneReserva) {
@@ -399,8 +478,20 @@ const InfoCurso = () => {
 
             // Caso normal: crear reserva pendiente y luego chat
             const reservaResp = await reservasAPI.createReserva({ cursoId });
+            
             if (!reservaResp?.data?.success) {
-                window.alert("No se pudo crear la reserva para este curso.");
+                const mensaje = reservaResp?.data?.message || "No se pudo crear la reserva para este curso.";
+                window.alert(mensaje);
+                
+                // ⭐ Actualizar disponibilidad si falló por falta de cupos
+                if (mensaje.includes("cupos")) {
+                    const { data } = await api.get(`/reservas/disponibilidad/${id}`, {
+                        params: { id_usuario: JSON.parse(localStorage.getItem("user") || "{}").id }
+                    });
+                    if (data?.success) {
+                        setDisponibilidad(data);
+                    }
+                }
                 return;
             }
 
@@ -509,6 +600,7 @@ const InfoCurso = () => {
                     curso={curso}
                     onReservar={handleReservar}
                     tieneReserva={tieneReserva}
+                    disponibilidad={disponibilidad}
                 />
                 <ReviewsSection
                     userReviews={userReviews}

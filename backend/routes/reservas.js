@@ -1,3 +1,4 @@
+// backend/routes/reservas.js
 const express = require('express');
 const Reserva = require('../models/Reserva');
 const Curso = require('../models/Curso');
@@ -6,10 +7,11 @@ const { authenticateToken } = require('./auth');
 
 const router = express.Router();
 
-// Crear reserva pendiente para un curso
+// ⭐ MODIFICADO: Crear reserva SIN ocupar cupo (se ocupa al aceptar)
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const { id_curso } = req.body;
+    const userId = req.user.userId;
 
     if (!id_curso) {
       return res.status(400).json({
@@ -26,9 +28,27 @@ router.post('/', authenticateToken, async (req, res) => {
       });
     }
 
-    // Crear reserva en estado pendiente, sin horario ni pago definidos aún
+    // Verificar si el usuario ya tiene una reserva activa para este curso
+    const reservaExistente = await Reserva.findOne({
+      id_usuario: userId,
+      id_curso,
+      estado: { $in: ['pendiente', 'confirmada', 'completada'] }
+    });
+
+    if (reservaExistente) {
+      return res.status(400).json({
+        success: false,
+        message: 'Ya tienes una reserva activa para este curso',
+        reserva: reservaExistente
+      });
+    }
+
+    // ⭐ CAMBIO: NO verificar disponibilidad aquí, solo crear la reserva pendiente
+    // El cupo se ocupará cuando el tutor acepte la reserva
+
+    // Crear reserva en estado pendiente
     const reserva = new Reserva({
-      id_usuario: req.user.userId,
+      id_usuario: userId,
       id_curso,
       pago: false,
       estado: 'pendiente',
@@ -37,10 +57,15 @@ router.post('/', authenticateToken, async (req, res) => {
 
     await reserva.save();
 
+    // ⭐ NO ocupar cupo aquí
+
     res.status(201).json({
       success: true,
       message: 'Reserva creada correctamente',
       reserva,
+      cupos_disponibles: curso.tiene_cupo_limitado 
+        ? Math.max(0, curso.cupo_maximo - curso.cupo_ocupado)
+        : null
     });
   } catch (error) {
     console.error('Error creando reserva:', error);
@@ -81,7 +106,7 @@ router.post('/completar', authenticateToken, async (req, res) => {
   }
 });
 
-// Rechazar una reserva pendiente (tutor)
+// ⭐ MODIFICADO: Rechazar una reserva (no liberar cupo porque nunca se ocupó)
 router.post('/rechazar', authenticateToken, async (req, res) => {
   try {
     const { id_curso, id_estudiante } = req.body;
@@ -127,12 +152,84 @@ router.post('/rechazar', authenticateToken, async (req, res) => {
     reserva.estado = 'rechazada';
     await reserva.save();
 
-    res.json({ success: true, reserva });
+    // ⭐ NO liberar cupo porque nunca se ocupó
+
+    res.json({ 
+      success: true, 
+      reserva,
+      cupos_disponibles: curso.tiene_cupo_limitado 
+        ? Math.max(0, curso.cupo_maximo - curso.cupo_ocupado)
+        : null
+    });
   } catch (error) {
     console.error('Error rechazando reserva:', error);
     res
       .status(500)
       .json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// ⭐ MODIFICADO: Cancelar reserva y liberar cupo SOLO si estaba confirmada
+router.post('/cancelar', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id_reserva } = req.body;
+
+    if (!id_reserva) {
+      return res.status(400).json({
+        success: false,
+        message: 'id_reserva es requerido',
+      });
+    }
+
+    const reserva = await Reserva.findById(id_reserva).populate('id_curso');
+
+    if (!reserva) {
+      return res.status(404).json({
+        success: false,
+        message: 'Reserva no encontrada',
+      });
+    }
+
+    // Verificar que la reserva pertenezca al usuario
+    if (String(reserva.id_usuario) !== String(userId)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No autorizado para cancelar esta reserva',
+      });
+    }
+
+    // Solo se pueden cancelar reservas pendientes o confirmadas
+    if (!['pendiente', 'confirmada'].includes(reserva.estado)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Esta reserva no puede ser cancelada',
+      });
+    }
+
+    const estabaConfirmada = reserva.estado === 'confirmada';
+    reserva.estado = 'cancelada';
+    await reserva.save();
+
+    // ⭐ CAMBIO: Solo liberar cupo si la reserva estaba confirmada
+    if (estabaConfirmada && reserva.id_curso) {
+      const curso = await Curso.findById(reserva.id_curso._id || reserva.id_curso);
+      if (curso) {
+        await curso.liberarCupo();
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Reserva cancelada correctamente',
+      reserva,
+    });
+  } catch (error) {
+    console.error('Error cancelando reserva:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+    });
   }
 });
 
@@ -142,7 +239,7 @@ router.get('/mis', authenticateToken, async (req, res) => {
     const userId = req.user.userId;
 
     const reservas = await Reserva.find({ id_usuario: userId })
-      .populate({ path: 'id_curso', select: 'nombre descripcion categorias portada_url' })
+      .populate({ path: 'id_curso', select: 'nombre descripcion categorias portada_url cupo_maximo cupo_ocupado tiene_cupo_limitado' })
       .populate({ path: 'id_horario', select: 'inicio fin' });
 
     res.json({ success: true, reservas });
@@ -206,7 +303,7 @@ router.get('/tutor/confirmadas', authenticateToken, async (req, res) => {
   }
 });
 
-// Aceptar una reserva pendiente: crear horario y confirmar reserva
+// ⭐ MODIFICADO: Aceptar reserva - AQUÍ se ocupa el cupo
 router.post('/aceptar', authenticateToken, async (req, res) => {
   try {
     const { id_curso, id_estudiante, inicio } = req.body;
@@ -242,12 +339,21 @@ router.post('/aceptar', authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Reserva pendiente no encontrada' });
     }
 
+    // ⭐ NUEVO: Verificar disponibilidad AHORA (antes de confirmar)
+    if (!curso.tieneDisponibilidad()) {
+      return res.status(400).json({
+        success: false,
+        message: 'No hay cupos disponibles para este curso',
+        cupos_disponibles: 0
+      });
+    }
+
     const inicioFecha = new Date(inicio);
     if (Number.isNaN(inicioFecha.getTime())) {
       return res.status(400).json({ success: false, message: 'Fecha/hora de inicio inválida' });
     }
 
-    const finFecha = new Date(inicioFecha.getTime() + 60 * 60 * 1000); // +1 hora por defecto
+    const finFecha = new Date(inicioFecha.getTime() + 60 * 60 * 1000); // +1 hora
 
     const horario = await Horario.create({
       id_curso,
@@ -260,15 +366,80 @@ router.post('/aceptar', authenticateToken, async (req, res) => {
     reserva.estado = 'confirmada';
     await reserva.save();
 
+    // ⭐ NUEVO: OCUPAR el cupo AHORA
+    try {
+      await curso.ocuparCupo();
+    } catch (error) {
+      // Si falla, revertir la confirmación
+      await Horario.findByIdAndDelete(horario._id);
+      reserva.estado = 'pendiente';
+      reserva.id_horario = null;
+      reserva.fecha = null;
+      await reserva.save();
+      
+      return res.status(400).json({
+        success: false,
+        message: error.message || 'Error al ocupar el cupo',
+      });
+    }
+
     res.status(200).json({
       success: true,
       message: 'Reserva aceptada y horario creado',
       reserva,
       horario,
+      cupos_disponibles: curso.tiene_cupo_limitado 
+        ? Math.max(0, curso.cupo_maximo - curso.cupo_ocupado)
+        : null
     });
   } catch (error) {
     console.error('Error aceptando reserva:', error);
     res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+});
+
+// Endpoint para verificar disponibilidad de un curso
+router.get('/disponibilidad/:id_curso', async (req, res) => {
+  try {
+    const { id_curso } = req.params;
+    const userId = req.query.id_usuario;
+
+    const curso = await Curso.findById(id_curso);
+    
+    if (!curso) {
+      return res.status(404).json({
+        success: false,
+        message: 'Curso no encontrado',
+      });
+    }
+
+    let reservaUsuario = null;
+    if (userId) {
+      reservaUsuario = await Reserva.findOne({
+        id_usuario: userId,
+        id_curso,
+        estado: { $in: ['pendiente', 'confirmada', 'completada'] }
+      });
+    }
+
+    res.json({
+      success: true,
+      tiene_cupo_limitado: curso.tiene_cupo_limitado,
+      cupo_maximo: curso.cupo_maximo,
+      cupo_ocupado: curso.cupo_ocupado,
+      cupos_disponibles: curso.tiene_cupo_limitado 
+        ? Math.max(0, curso.cupo_maximo - curso.cupo_ocupado)
+        : null,
+      tiene_disponibilidad: curso.tieneDisponibilidad(),
+      usuario_tiene_reserva: !!reservaUsuario,
+      reserva_usuario: reservaUsuario
+    });
+  } catch (error) {
+    console.error('Error verificando disponibilidad:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+    });
   }
 });
 

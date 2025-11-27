@@ -54,6 +54,17 @@ router.get('/', async (req, res) => {
     const totalCursos = await Curso.countDocuments(filters);
     const totalPages = Math.ceil(totalCursos / limit);
 
+    const cursosConCupos = cursos.map(curso => {
+      const cursoObj = curso.toObject({ virtuals: true });
+      return {
+        ...cursoObj,
+        cupos_disponibles: curso.tiene_cupo_limitado 
+          ? Math.max(0, curso.cupo_maximo - curso.cupo_ocupado)
+          : null,
+        tiene_disponibilidad: curso.tieneDisponibilidad()
+      };
+    });
+
     res.json({
       success: true,
       cursos,
@@ -132,9 +143,17 @@ router.get('/:id', async (req, res) => {
       });
     }
 
+    const cursoObj = curso.toObject({ virtuals: true });
+    
     res.json({
       success: true,
-      curso
+      curso: {
+        ...cursoObj,
+        cupos_disponibles: curso.tiene_cupo_limitado 
+          ? Math.max(0, curso.cupo_maximo - curso.cupo_ocupado)
+          : null,
+        tiene_disponibilidad: curso.tieneDisponibilidad()
+      }
     });
 
   } catch (error) {

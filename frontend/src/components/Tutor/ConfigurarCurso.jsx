@@ -22,6 +22,8 @@ const ConfigurarCurso = () => {
     tags: [], // usaremos este arreglo para guardar los IDs de categorías seleccionadas
     portada_url: "",
     galeria_urls: [],
+    tiene_cupo_limitado: false,
+    cupo_maximo: 0,
   });
 
   const [categorias, setCategorias] = useState([]);
@@ -158,6 +160,8 @@ const ConfigurarCurso = () => {
         tags: selectedCategorias.map((cat) => cat.nombre),
         portada_url: form.portada_url || "",
         galeria_urls: Array.isArray(form.galeria_urls) ? form.galeria_urls : [],
+        tiene_cupo_limitado: form.tiene_cupo_limitado,
+        cupo_maximo: form.tiene_cupo_limitado ? Number(form.cupo_maximo) : 0,
       };
 
       const { data } = await cursosAPI.createCurso(payload);
@@ -320,6 +324,37 @@ const ConfigurarCurso = () => {
                       <option value="hibrida">Híbrida</option>
                     </select>
                   </div>
+                  <div className="form-group">
+                    <label className="form-label">
+                      <input
+                        type="checkbox"
+                        name="tiene_cupo_limitado"
+                        checked={form.tiene_cupo_limitado}
+                        onChange={handleChange}
+                        className="mr-2"
+                      />
+                      Limitar cupos disponibles
+                    </label>
+                  </div>
+
+                  {form.tiene_cupo_limitado && (
+                    <div className="form-group">
+                      <label className="form-label">Cupo máximo</label>
+                      <input
+                        type="number"
+                        name="cupo_maximo"
+                        className="form-input"
+                        value={form.cupo_maximo}
+                        onChange={handleChange}
+                        placeholder="Ej: 20"
+                        min="1"
+                        required={form.tiene_cupo_limitado}
+                      />
+                      <p className="text-sm text-slate-600 mt-1">
+                        Número máximo de estudiantes que pueden reservar este curso
+                      </p>
+                    </div>
+                  )}
 
                   {/* La selección de categorías ahora se realiza en el bloque de tags/categorías */}
 

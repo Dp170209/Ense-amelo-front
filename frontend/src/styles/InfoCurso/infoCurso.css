@@ -193,3 +193,38 @@
   content: "★";
   @apply text-amber-500 mt-[1px] text-sm;
 }
+
+.infocurso-cupos-info {
+    margin: 1rem 0;
+    padding: 0.75rem;
+    border-radius: 8px;
+    background-color: #f8fafc;
+}
+
+.infocurso-cupos-disponibles {
+    color: #059669;
+    font-weight: 500;
+    margin: 0;
+}
+
+.infocurso-cupos-agotados {
+    color: #dc2626;
+    font-weight: 500;
+    margin: 0;
+}
+
+.infocurso-reserva-existente {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: #dbeafe;
+    color: #1e40af;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.infocurso-reserve-btn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
