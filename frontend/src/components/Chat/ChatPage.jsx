@@ -4,7 +4,7 @@ import { chatsAPI } from "../../api/chats";
 import { reservasAPI } from "../../api/reservas";
 import { useNotification } from "../NotificationProvider";
 import ReservarHorario from "./ReservarHorario";
-import "../../styles/chat.css";
+import "../../styles/Chat/chat.css";
 
 const ChatPage = () => {
   const navigate = useNavigate();

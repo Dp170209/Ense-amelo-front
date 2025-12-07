@@ -26,7 +26,7 @@ const usuarioSchema = new mongoose.Schema({
   contrasenia: {
     type: String,
     required: true,
-    maxlength: 50
+    maxlength: 200,
   },
   rolCodigo: {
     type: Number,

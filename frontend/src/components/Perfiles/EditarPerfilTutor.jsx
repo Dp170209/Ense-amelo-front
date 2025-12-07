@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/perfilEstudiante.css";
-import { authAPI } from "../api/auth";
+import "../../styles/Perfiles/perfilEstudiante.css";
+import { authAPI } from "../../api/auth";
 
-const EditarPerfilEstudiante = () => {
+
+const EditarPerfilTutor = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -14,7 +15,6 @@ const EditarPerfilEstudiante = () => {
     telefono: "",
     foto: "",
     descripcion: "",
-    currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
@@ -78,14 +78,24 @@ const EditarPerfilEstudiante = () => {
   const handleSave = async (e) => {
     e.preventDefault();
 
-    if (form.newPassword && form.newPassword !== form.confirmPassword) {
-      alert("Las contraseñas no coinciden");
-      return;
-    }
+    // ¿Está intentando cambiar la contraseña?
+    const isChangingPassword = form.newPassword || form.confirmPassword;
 
-    if (form.newPassword && form.newPassword.length < 6) {
-      alert("La nueva contraseña debe tener al menos 6 caracteres");
-      return;
+    if (isChangingPassword) {
+      if (!form.newPassword || !form.confirmPassword) {
+        alert("Debes completar la nueva contraseña y su confirmación");
+        return;
+      }
+
+      if (form.newPassword !== form.confirmPassword) {
+        alert("Las contraseñas no coinciden");
+        return;
+      }
+
+      if (form.newPassword.length < 6) {
+        alert("La nueva contraseña debe tener al menos 6 caracteres");
+        return;
+      }
     }
 
     try {
@@ -98,28 +108,39 @@ const EditarPerfilEstudiante = () => {
         telefono: form.telefono,
         foto: form.foto,
         descripcion: form.descripcion,
-        newPassword: form.newPassword || undefined,
       };
+
+      if (isChangingPassword) {
+        payload.newPassword = form.newPassword;
+      }
 
       const { data } = await authAPI.updateProfile(payload);
 
       if (data?.success && data.user) {
         localStorage.setItem("user", JSON.stringify(data.user));
-        alert("Perfil actualizado exitosamente");
-        navigate("/perfil");
+        alert("Perfil de tutor actualizado exitosamente");
+
+        setForm((prev) => ({
+          ...prev,
+          newPassword: "",
+          confirmPassword: "",
+        }));
+
+        navigate("/tutor/perfil");
       } else {
         alert("No se pudo actualizar el perfil. Intenta nuevamente.");
       }
     } catch (error) {
-      console.error("Error actualizando perfil:", error);
+      console.error("Error actualizando perfil de tutor:", error);
       alert("Error al actualizar el perfil");
     } finally {
       setLoading(false);
     }
   };
 
+
   const goBack = () => {
-    navigate("/perfil");
+    navigate("/tutor/perfil");
   };
 
   return (
@@ -128,7 +149,7 @@ const EditarPerfilEstudiante = () => {
         <div className="container">
           <div className="header-content">
             <div className="header-left">
-              <h1>Editar Perfil Estudiante</h1>
+              <h1>Editar Perfil Tutor</h1>
               <p className="header-subtitle">Container</p>
             </div>
           </div>
@@ -139,7 +160,6 @@ const EditarPerfilEstudiante = () => {
         <div className="container">
           <div className="edit-form">
             <form onSubmit={handleSave}>
-              {/* Información Personal */}
               <div className="form-section">
                 <h3 className="section-title">Información Personal</h3>
 
@@ -227,7 +247,6 @@ const EditarPerfilEstudiante = () => {
                 </div>
               </div>
 
-              {/* Descripción */}
               <div className="form-section">
                 <h3 className="section-title">Descripción</h3>
                 <div className="form-group">
@@ -237,26 +256,14 @@ const EditarPerfilEstudiante = () => {
                     className="form-textarea"
                     value={form.descripcion}
                     onChange={handleChange}
-                    placeholder="Cuéntanos sobre ti..."
+                    placeholder="Cuéntanos sobre tu experiencia como tutor..."
                     rows={4}
                   ></textarea>
                 </div>
               </div>
 
-              {/* Cambiar contraseña */}
               <div className="form-section">
                 <h3 className="section-title">Cambiar Contraseña</h3>
-
-                <div className="form-group">
-                  <label className="form-label">Contraseña Actual</label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    className="form-input"
-                    value={form.currentPassword}
-                    onChange={handleChange}
-                  />
-                </div>
 
                 <div className="form-row">
                   <div className="form-group">
@@ -303,4 +310,4 @@ const EditarPerfilEstudiante = () => {
   );
 };
 
-export default EditarPerfilEstudiante;
+export default EditarPerfilTutor;

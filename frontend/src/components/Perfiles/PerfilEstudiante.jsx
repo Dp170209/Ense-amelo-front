@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/perfilEstudiante.css";
-import { authAPI } from "../api/auth";
+import "../../styles/Perfiles/perfilEstudiante.css";
+import { authAPI } from "../../api/auth";
 
 const PerfilEstudiante = () => {
   const navigate = useNavigate();

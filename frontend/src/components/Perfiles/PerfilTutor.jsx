@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/perfilTutor.css";
-import { authAPI } from "../api/auth";
+import "../../styles/Perfiles/perfilTutor.css";
+import { authAPI } from "../../api/auth";
 
 const PerfilTutor = () => {
   const navigate = useNavigate();

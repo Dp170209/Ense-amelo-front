@@ -6,13 +6,12 @@ import Explorar from "./components/Explorar/Explorar";
 import MisCursos from "./components/MisCursos/MisCursos";
 import InfoCurso from "./components/InfoCurso/InfoCurso";
 import Navbar from "./components/Navbar";
-import PerfilEstudiante from "./components/PerfilEstudiante";
-import EditarPerfilEstudiante from "./components/EditarPerfilEstudiante";
-import RegistroTutor from "./components/RegistroTutor";
+import PerfilEstudiante from "./components/Perfiles/PerfilEstudiante";
+import EditarPerfilEstudiante from "./components/Perfiles/EditarPerfilEstudiante";
 import PanelTutor from "./components/Tutor/PanelTutor";
 import ConfigurarCurso from "./components/Tutor/ConfigurarCurso";
-import PerfilTutor from "./components/PerfilTutor";
-import EditarPerfilTutor from "./components/EditarPerfilTutor";
+import PerfilTutor from "./components/Perfiles/PerfilTutor";
+import EditarPerfilTutor from "./components/Perfiles/EditarPerfilTutor";
 import PanelAdmin from "./components/Admin/PanelAdmin";
 import ChatPage from "./components/Chat/ChatPage";
 
@@ -21,13 +20,12 @@ function App() {
     <NotificationProvider>
       <div className="min-h-screen bg-slate-100">
         <Routes>
-          {/* Redirección raíz (opcional) */}
+          {/* Redirección raíz  */}
           <Route path="/" element={<Navigate to="/explorar" replace />} />
 
           {/* Login y registro */}
           <Route path="/login" element={<LoginForm />} />
           <Route path="/register" element={<RegisterForm />} />
-          <Route path="/registro-tutor" element={<RegistroTutor />} />
 
           {/* Panel admin (solicitudes de tutores) */}
           <Route

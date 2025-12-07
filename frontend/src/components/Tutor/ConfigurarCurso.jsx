@@ -5,7 +5,7 @@ import { cursosAPI } from "../../api/cursos";
 import { uploadsAPI } from "../../api/uploads";
 import { useNotification } from "../NotificationProvider";
 import FormularioCurso from "./FormularioCurso";
-import "../../styles/configCurso.css";
+import "../../styles/Tutor/configCurso.css";
 
 const ConfigurarCurso = () => {
   const navigate = useNavigate();

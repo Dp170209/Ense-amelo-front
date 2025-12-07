@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../../styles/chat.css";
+import "../../styles/Chat/chat.css";
 
 const ReservarHorario = ({ onClose, onConfirm }) => {
   const [fechaHora, setFechaHora] = useState("");
