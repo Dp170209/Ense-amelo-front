@@ -3,6 +3,7 @@ const Curso = require('../models/Curso');
 const Categoria = require('../models/Categoria');
 const PerfilTutor = require('../models/PerfilTutor');
 const Usuario = require('../models/Usuario');
+const Suscripcion = require('../models/Suscripcion');
 const { authenticateToken } = require('./auth');
 
 const router = express.Router();
@@ -189,6 +190,40 @@ router.post('/', authenticateToken, async (req, res) => {
       });
 
       await perfilTutor.save();
+    }
+
+    // Verificar cuántos cursos activos tiene este tutor
+    const cursosTutorActivos = await Curso.countDocuments({
+      id_tutor: perfilTutor._id,
+      activo: true,
+    });
+
+    // Si tiene 3 o más cursos, verificar suscripción
+    if (cursosTutorActivos >= 3) {
+      // Verificar si el usuario tiene una suscripción activa
+      const ahora = new Date();
+      const suscripcionActiva = await Suscripcion.findOne({
+        id_usuario: req.user.userId,
+        fin: { $gte: ahora },
+        estado: 'activa',
+      }).populate('id_plan');
+
+      if (!suscripcionActiva) {
+        return res.status(403).json({
+          success: false,
+          message:
+            'Ya alcanzaste el límite de 3 cursos gratuitos. Contrata un plan para crear más cursos.',
+        });
+      }
+
+      // Verificar si ha alcanzado el límite de cursos según su plan
+      const limiteCursos = suscripcionActiva.id_plan.cantidadCursos;
+      if (cursosTutorActivos >= limiteCursos) {
+        return res.status(403).json({
+          success: false,
+          message: `Has alcanzado el límite de ${limiteCursos} cursos según tu plan "${suscripcionActiva.id_plan.nombre}".`,
+        });
+      }
     }
 
     const cursoData = {

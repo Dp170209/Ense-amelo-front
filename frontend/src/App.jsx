@@ -6,6 +6,7 @@ import Explorar from "./components/Explorar/Explorar";
 import MisCursos from "./components/MisCursos/MisCursos";
 import InfoCurso from "./components/InfoCurso/InfoCurso";
 import Navbar from "./components/Navbar";
+import Planes from "./components/Pagos/Planes";
 import PerfilEstudiante from "./components/Perfiles/PerfilEstudiante";
 import EditarPerfilEstudiante from "./components/Perfiles/EditarPerfilEstudiante";
 import PanelTutor from "./components/Tutor/PanelTutor";
@@ -127,6 +128,35 @@ function App() {
           {/* Perfil tutor */}
           <Route path="/tutor/perfil" element={<PerfilTutor />} />
           <Route path="/tutor/perfil/editar" element={<EditarPerfilTutor />} />
+
+          {/* Planes para tutores */}
+          <Route
+            path="/planes"
+            element={
+              <>
+                <Navbar currentSection="planes" />
+                <Planes />
+              </>
+            }
+          />
+          <Route
+            path="/planes/success"
+            element={
+              <>
+                <Navbar currentSection="planes" />
+                <Planes />
+              </>
+            }
+          />
+          <Route
+            path="/planes/cancel"
+            element={
+              <>
+                <Navbar currentSection="planes" />
+                <Planes />
+              </>
+            }
+          />
 
           {/* Default */}
           <Route path="*" element={<Navigate to="/login" replace />} />

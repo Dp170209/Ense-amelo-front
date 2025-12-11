@@ -57,7 +57,11 @@ const Navbar = ({ currentSection, adminMode = false }) => {
 
   const goToProfile = () => {
     setProfileOpen(false);
-    navigate("/perfil");
+    if (isTutor) {
+      navigate("/tutor/perfil");
+    } else {
+      navigate("/perfil");
+    }
   };
 
   const defaultAvatarUrl =
@@ -125,9 +129,14 @@ const Navbar = ({ currentSection, adminMode = false }) => {
             )}
 
             {isTutor && (
-              <Link to="/chats" className={linkClasses("chats")}>
-                Chats
-              </Link>
+              <>
+                <Link to="/chats" className={linkClasses("chats")}>
+                  Chats
+                </Link>
+                <Link to="/planes" className={linkClasses("planes")}>
+                  Planes
+                </Link>
+              </>
             )}
 
             {isTutor && !isOnTutorPanel && (
@@ -215,13 +224,22 @@ const Navbar = ({ currentSection, adminMode = false }) => {
           )}
 
           {isTutor && (
-            <Link
-              to="/chats"
-              className={linkClasses("chats") + " w-fit"}
-              onClick={() => setOpen(false)}
-            >
-              Chats
-            </Link>
+            <>
+              <Link
+                to="/chats"
+                className={linkClasses("chats") + " w-fit"}
+                onClick={() => setOpen(false)}
+              >
+                Chats
+              </Link>
+              <Link
+                to="/planes"
+                className={linkClasses("planes") + " w-fit"}
+                onClick={() => setOpen(false)}
+              >
+                Planes
+              </Link>
+            </>
           )}
 
           {isTutor && !isOnTutorPanel && (

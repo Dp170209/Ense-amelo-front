@@ -2,7 +2,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');                 // <--- NUEVO
+const path = require('path');            
+require('dotenv').config();     // <--- NUEVO
 const config = require('./config');
 
 // Importar rutas
@@ -13,11 +14,16 @@ const uploadsRoutes = require('./routes/uploads'); // <--- NUEVO
 const chatRoutes = require('./routes/chats');
 const verificarRoutes = require('./routes/verificar');
 const reservasRoutes = require('./routes/reservas');
+const planesRoutes = require('./routes/planes');
 
 const app = express();
 
 // Middlewares
 app.use(cors());
+
+// Middleware especial para webhook de Stripe (debe ir antes de express.json)
+app.use('/api/planes/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -42,6 +48,7 @@ app.use('/api/uploads', uploadsRoutes); // <--- NUEVO (endpoint de subida)
 app.use('/api/chats', chatRoutes);
 app.use('/api/verificar', verificarRoutes);
 app.use('/api/reservas', reservasRoutes);
+app.use('/api/planes', planesRoutes);
 
 // Servir archivos estáticos subidos (URLs públicas)
 // Ej: http://localhost:3000/static/cursos/<archivo>.jpg
