@@ -200,29 +200,28 @@ router.post('/', authenticateToken, async (req, res) => {
 
     // Si tiene 3 o más cursos, verificar suscripción
     if (cursosTutorActivos >= 3) {
-      // Verificar si el usuario tiene una suscripción activa
+      // Verificar si el usuario tiene una suscripción vigente (activa o cancelada pero no expirada)
       const ahora = new Date();
-      const suscripcionActiva = await Suscripcion.findOne({
+      const suscripcionVigente = await Suscripcion.findOne({
         id_usuario: req.user.userId,
         fin: { $gte: ahora },
-        estado: 'activa',
+        estado: { $in: ['activa', 'cancelada'] }, // Incluir canceladas pero vigentes
       }).populate('id_plan');
 
-      if (!suscripcionActiva) {
+      if (!suscripcionVigente) {
         return res.status(403).json({
-          success: false,
-          message:
-            'Ya alcanzaste el límite de 3 cursos gratuitos. Contrata un plan para crear más cursos.',
+          message: "Has alcanzado el límite de 3 cursos gratuitos. Para crear más cursos, adquiere un plan.",
         });
       }
 
-      // Verificar si ha alcanzado el límite de cursos según su plan
-      const limiteCursos = suscripcionActiva.id_plan.cantidadCursos;
+      // Usar el límite de cursos del plan
+      const limiteCursos = suscripcionVigente.id_plan.cantidadCursos;
       if (cursosTutorActivos >= limiteCursos) {
-        return res.status(403).json({
-          success: false,
-          message: `Has alcanzado el límite de ${limiteCursos} cursos según tu plan "${suscripcionActiva.id_plan.nombre}".`,
-        });
+        const estadoMensaje = suscripcionVigente.estado === 'cancelada' 
+          ? `Has alcanzado el límite de ${limiteCursos} cursos según tu plan "${suscripcionVigente.id_plan.nombre}". Tu suscripción está cancelada pero vigente hasta el ${new Date(suscripcionVigente.fin).toLocaleDateString()}.`
+          : `Has alcanzado el límite de ${limiteCursos} cursos según tu plan "${suscripcionVigente.id_plan.nombre}".`;
+        
+        return res.status(403).json({ message: estadoMensaje });
       }
     }
 

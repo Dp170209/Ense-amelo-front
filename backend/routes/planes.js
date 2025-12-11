@@ -169,16 +169,26 @@ router.post('/crear-sesion', authenticateToken, requireRole(['docente']), async 
     const amountInCents = Math.round(plan.precio * 100);
 
     const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
+      mode: 'subscription', // Cambiado a subscription para renovaciones automáticas
       payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
-            currency: 'usd', // ajusta si usas otra moneda
+            currency: 'usd',
             product_data: {
               name: `Plan ${plan.nombre}`,
+              description: plan.descripcion,
+              metadata: {
+                planId: plan._id.toString(),
+                duracionDias: plan.duracionDias.toString(),
+                cantidadCursos: plan.cantidadCursos.toString(),
+              },
             },
-            unit_amount: amountInCents,
+            unit_amount: Math.round(plan.precio * 100),
+            recurring: {
+              interval: 'day',
+              interval_count: plan.duracionDias, // Renovar cada N días
+            },
           },
           quantity: 1,
         },
@@ -222,7 +232,21 @@ router.post('/cancelar-suscripcion', authenticateToken, requireRole(['docente'])
       });
     }
 
-    // Actualizar suscripción a cancelada
+    // Cancelar en Stripe si hay suscripción recurrente
+    if (stripe && suscripcion.stripeSubscriptionId) {
+      try {
+        await stripe.subscriptions.update(suscripcion.stripeSubscriptionId, {
+          cancel_at_period_end: true, // Cancelar al final del período
+        });
+        
+        console.log(`Suscripción Stripe ${suscripcion.stripeSubscriptionId} marcada para cancelar al final del período`);
+      } catch (stripeError) {
+        console.error('Error cancelando suscripción en Stripe:', stripeError);
+        // Continuamos aunque falle Stripe
+      }
+    }
+
+    // Marcar como cancelada localmente (pero sigue vigente hasta fin)
     suscripcion.estado = 'cancelada';
     suscripcion.fechaCancelacion = ahora;
     await suscripcion.save();
@@ -235,7 +259,7 @@ router.post('/cancelar-suscripcion', authenticateToken, requireRole(['docente'])
 
     res.json({ 
       success: true, 
-      message: 'Suscripción cancelada exitosamente.' 
+      message: 'Suscripción cancelada. Continuarás teniendo acceso hasta el final del período actual.' 
     });
   } catch (error) {
     console.error('Error cancelando suscripción:', error);
@@ -265,6 +289,8 @@ router.post('/webhook', async (req, res) => {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       const pagoId = session.metadata?.pagoId;
+      const suscripcionId = session.metadata?.suscripcionId;
+      
       if (pagoId) {
         const pago = await Pago.findById(pagoId).populate('id_suscripcion');
         if (pago) {
@@ -273,7 +299,86 @@ router.post('/webhook', async (req, res) => {
           await pago.save();
         }
       }
-    } else if (event.type === 'checkout.session.expired' || event.type === 'checkout.session.async_payment_failed') {
+      
+      // Guardar IDs de Stripe para renovaciones y cancelaciones
+      if (suscripcionId && session.subscription && session.customer) {
+        const suscripcion = await Suscripcion.findById(suscripcionId);
+        if (suscripcion) {
+          suscripcion.stripeSubscriptionId = session.subscription;
+          suscripcion.stripeCustomerId = session.customer;
+          await suscripcion.save();
+        }
+      }
+    } 
+    // Manejar renovaciones automáticas
+    else if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object;
+      const subscriptionId = invoice.subscription;
+      
+      // Buscar suscripción por stripeSubscriptionId
+      const suscripcion = await Suscripcion.findOne({ 
+        stripeSubscriptionId: subscriptionId 
+      }).populate('id_plan');
+      
+      if (suscripcion) {
+        // Extender fecha de fin
+        const plan = suscripcion.id_plan;
+        const nuevoFin = new Date(suscripcion.fin.getTime() + plan.duracionDias * 24 * 60 * 60 * 1000);
+        suscripcion.fin = nuevoFin;
+        await suscripcion.save();
+        
+        // Crear nuevo registro de pago
+        await Pago.create({
+          id_suscripcion: suscripcion._id,
+          monto: plan.precio,
+          metodo: 'stripe',
+          estado: 'exitoso',
+          stripePaymentIntentId: invoice.payment_intent,
+        });
+        
+        console.log(`Suscripción ${suscripcion._id} renovada hasta ${nuevoFin}`);
+      }
+    }
+    // Manejar fallas en renovación
+    else if (event.type === 'invoice.payment_failed') {
+      const invoice = event.data.object;
+      const subscriptionId = invoice.subscription;
+      
+      const suscripcion = await Suscripcion.findOne({ 
+        stripeSubscriptionId: subscriptionId 
+      });
+      
+      if (suscripcion) {
+        // Crear registro de pago fallido
+        await Pago.create({
+          id_suscripcion: suscripcion._id,
+          monto: suscripcion.id_plan.precio,
+          metodo: 'stripe',
+          estado: 'fallido',
+          stripePaymentIntentId: invoice.payment_intent,
+        });
+        
+        console.log(`Fallo en renovación de suscripción ${suscripcion._id}`);
+      }
+    }
+    // Manejar cancelación desde Stripe
+    else if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object;
+      const subscriptionId = subscription.id;
+      
+      const suscripcion = await Suscripcion.findOne({ 
+        stripeSubscriptionId: subscriptionId 
+      });
+      
+      if (suscripcion) {
+        suscripcion.estado = 'cancelada';
+        suscripcion.fechaCancelacion = new Date();
+        await suscripcion.save();
+        
+        console.log(`Suscripción ${suscripcion._id} cancelada desde Stripe`);
+      }
+    }
+    else if (event.type === 'checkout.session.expired' || event.type === 'checkout.session.async_payment_failed') {
       const session = event.data.object;
       const pagoId = session.metadata?.pagoId;
       if (pagoId) {

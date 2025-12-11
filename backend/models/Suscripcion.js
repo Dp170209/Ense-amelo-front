@@ -28,6 +28,14 @@ const suscripcionSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  stripeSubscriptionId: {
+    type: String,
+    default: null,
+  },
+  stripeCustomerId: {
+    type: String,
+    default: null,
+  },
 }, {
   timestamps: true,
 });
